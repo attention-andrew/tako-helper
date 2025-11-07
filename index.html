@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Paste a video, loop relevant parts, and make flashcards for your language studies!">
+    <meta name="author" content="Attention Andrew">
+    <meta name="start-date" content="6-11-25">
+    <title>Tako-Helper!</title>
+
+</head>
+<body>
+
+
+    <header>
+        <h1>Tako-Helper! v1</h1>
+        <ol>
+            <li>Paste a YouTube video link.</li>
+            <li>Control playback speed and loop sections with hotkeys.</li>
+            <li>Display Japanese transcriptions (auto-generated or pulled from subtitles).</li>
+            <li>Translate each line into English.</li>
+            <li>Build flashcards from the sentences.</li>
+        </ol>
+    </header>
+
+    <!-- 
+        TODO
+        [x] - A simple HTML layout with an input box for YouTube URL.
+        [x] - An embedded YouTube player.
+        [ ] - Hotkeys to slow down (`S`) and speed up (`D`).
+        [ ] - A simple loop from start → end timestamps.
+    -->
+
+    <main>
+
+        <!-- tester w/ embed/VIDEO_ID format: 
+         https://www.youtube.com/embed/pQI64hD2sJw 
+         -->
+         <!-- no format: https://www.youtube.com/watch?v=pQI64hD2sJw -->
+        <section id="Input-YouTube-URL">
+            <form id="submit-yt-url" onsubmit="return handleUrlSubmit(event);">
+                <label for="youtube_url_label">Paste YouTube URL:</label>
+                <input type="url" id="youtube_url" name="youtube_url" placeholder="https://www.youtube.com/@AttentionAndrew" required>
+                <input type="submit" value="Submit">
+            </form>
+        </section>
+
+
+
+        <section id="Embedded-YTP">
+            <!-- 480x270 | 854x480 | 1280x720 | 1920x1080 -->
+            <iframe 
+                id="user_url" 
+                width="854" 
+                height="480" 
+                frameborder="0" 
+                allowfullscreen 
+                title="User Url"
+                allow=
+                    "accelerometer; 
+                    autoplay; 
+                    clipboard-write; 
+                    encrypted-media; 
+                    gyroscope; 
+                    picture-in-picture" 
+                >
+                
+            </iframe>
+
+        
+        </section>
+
+
+
+
+
+
+
+
+
+    </main>
+
+
+
+
+
+    <br> <!-- TEMP UNTIL I ADD CSS -->
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <footer class="last-updated">
+        <script class="update-time">
+            document.write("Last Updated: " + document.lastModified);
+        </script>
+    </footer>
+
+
+
+    <!-- placing at end so HTML loads before JS -->
+    <script src="script.js" defer></script>
+
+</body>
+</html>
