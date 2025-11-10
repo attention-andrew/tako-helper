@@ -7,42 +7,6 @@ TODO:
         [ ] - take user video 'id' & insert into player 'onYouTubeIframeAPIReady()'
 */
 
-// api key: AIzaSyA49C9N7yqQnid1HUEFoLI84Qq3eQIXY1w
-
-
-
-// Set_ID result: `https://www.youtube.com/embed/${URL_ID}`
-
-
-// function to get embed ID
-function getEmbedId(url, id) {
-    const index = url.indexOf(id); // when calling function, use "v="
-    if (index === -1) {
-        alert("Url Not Found");
-        return ""; // not found
-    }
-    return url.substring(index + id.length); // get substring after "v=" (the id)
-}
-
-
-
-// function for when user submits url, grabs the Value
-function handleUrlSubmit(event) {
-    event.preventDefault(); // prevents from submitting normally
-    const userUrl = document.getElementById('youtube_url').value;
-
-    // grabbing id
-    
-
-    const iFrame = document.getElementById('user_url').src = userUrl; // update w/ id
-
-    return false; // prevents form from submitting
-}
-
-// using the userUrl later:
-// const userInput = "the url: " + userUrl;
-
-
 // using YT-API
 var tag = document.createElement('script');
 
@@ -55,12 +19,48 @@ firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
 
 // 480x270 | 854x480 | 1280x720 | 1920x1080
-var player;
-function onYouTubeIframeAPIReady() {
-    player = new onYouTubeIframeAPIReady.Player('player', {
-        height: '480',
-        width: '854',
-        // videoId: 'USER_ID',
+// no format: https://www.youtube.com/watch?v=pQI64hD2sJw
+
+
+function cueYouTubeVideo() {
+    player.cueVideoById({
+        videoId: yt_id, 
     });
 }
 
+
+
+var yt_id; // for the embed id
+
+
+// function to get embed ID
+function getEmbedId(url) {
+
+    let videoId = url.match(/(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^&\n]{11})/);
+
+    return(videoId[1]);
+
+}
+
+
+// function for when user submits url, grabs the Value
+function handleUrlSubmit(event) {
+    event.preventDefault(); // prevents from submitting normally
+    const userUrl = document.getElementById('youtube_url').value;
+
+    // grabbing id w/ function getEmbedId(url, id)
+    yt_id = getEmbedId(userUrl);
+
+
+    var player;
+    player = new YT.Player('player', {
+        height: '480',
+        width: '854'
+    });   
+    
+    
+    cueYouTubeVideo();
+    
+
+    return false; // prevents form from submitting
+}
