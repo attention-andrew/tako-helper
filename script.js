@@ -3,8 +3,12 @@
 
 /*
 TODO:
-    [ ] - update function for handleUrlSubmit(event) to only grab id
-        [ ] - take user video 'id' & insert into player 'onYouTubeIframeAPIReady()'
+    [x] - update function for handleUrlSubmit(event) to only grab id
+        [x] - take user video 'id' & insert into player 'onYouTubeIframeAPIReady()'
+    [ ] - make s & d speed controls in increments of 10% speed change
+        - 2 problems:
+            - 1: event.target.setPlaybackRate(1-0.3); not working
+            - 2: only when I click off the video is when my keyControls() works
 */
 
 // using YT-API
@@ -21,17 +25,8 @@ firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 // 480x270 | 854x480 | 1280x720 | 1920x1080
 // no format: https://www.youtube.com/watch?v=pQI64hD2sJw
 
-
-function cueYouTubeVideo() {
-    player.cueVideoById({
-        videoId: yt_id, 
-    });
-}
-
-
-
 var yt_id; // for the embed id
-
+var player; // moved from function handleUrlSubmit
 
 // function to get embed ID
 function getEmbedId(url) {
@@ -43,6 +38,40 @@ function getEmbedId(url) {
 }
 
 
+// TODO: [ ] - make s & d speed controls in increments of 10% speed change
+function keyControls(event) {
+    
+    var v = event.target.getPlaybackRate();
+    event.target.setPlaybackRate(1-0.3);
+
+        document.addEventListener("keydown", (event) => {
+            const keyName = event.key;
+
+            if (keyName === "s" && (v >= 0.1 || v <= 5)) {
+                //event.target.setPlaybackRate(v-0.1);
+                console.log(`${keyName} pressed.`);
+                console.log(`Playback Rate: ${v}.`);
+            }
+        });
+
+        document.addEventListener("keydown", (event) => {
+            const keyName = event.key;
+
+            if (keyName === "d") {
+                console.log(`${keyName} pressed.`)
+            }
+        });
+
+        // TODO: [ ] - use 'getPlaybackRate' & 'setPlaybackRate(*rate)' to bind hotkeys with
+            // 'onPlaybackRateChange' - "fires" when vid playback rate *changes*
+        /* Logic:
+            Key press -> check (0.10 <= V <= 5) -> update V if 's' or 'd' pressed -> repeat!
+        */
+        
+}
+
+
+
 // function for when user submits url, grabs the Value
 function handleUrlSubmit(event) {
     event.preventDefault(); // prevents from submitting normally
@@ -51,16 +80,16 @@ function handleUrlSubmit(event) {
     // grabbing id w/ function getEmbedId(url, id)
     yt_id = getEmbedId(userUrl);
 
-
-    var player;
+    
     player = new YT.Player('player', {
         height: '480',
-        width: '854'
+        width: '854',
+        videoId: yt_id,
+        events: {
+            'onReady': keyControls //test
+        }
     });   
     
-    
-    cueYouTubeVideo();
-    
-
     return false; // prevents form from submitting
 }
+
