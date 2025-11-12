@@ -26,7 +26,8 @@ firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 // no format: https://www.youtube.com/watch?v=pQI64hD2sJw
 
 var yt_id; // for the embed id
-var player; // moved from function handleUrlSubmit
+var player;
+const overlay = document.querySelector(".overlay");
 
 // function to get embed ID
 function getEmbedId(url) {
@@ -39,25 +40,42 @@ function getEmbedId(url) {
 
 
 // TODO: [ ] - make s & d speed controls in increments of 10% speed change
-function keyControls(event) {
-    
-    var v = event.target.getPlaybackRate();
-    event.target.setPlaybackRate(1-0.3);
+function onPlayerReady(event) {
+    document.addEventListener("keydown", function(e) {
+        speedControls(e);
+    });
+    // ADD STUFF HERE FOR PLAY/PAUSE!!!!!!!!!!!!!!!!!!!!!!
+}
 
-        document.addEventListener("keydown", (event) => {
+
+
+function playPauseVideo(event) {
+    overlay.addEventListener("click", (event) => {
+        const mClick = event.mouseClick;
+
+        if (event.data == YT.PlayerState.PAUSED) {
+            player.playVideo();
+        } else if (event.data == YT.PlayerState.PLAYING) {
+            player.pauseVideo();
+        }
+
+    });    
+}
+
+
+
+function speedControls(event) {
+    var v = player.getPlaybackRate();
+
+    document.addEventListener("keydown", (event) => {
             const keyName = event.key;
-
             if (keyName === "s" && (v >= 0.1 || v <= 5)) {
                 //event.target.setPlaybackRate(v-0.1);
+                player.setPlaybackRate(player.getPlaybackRate() - 0.1);
+                console.log(`${player.getPlaybackRate()} player.getPlaybackRate`);
                 console.log(`${keyName} pressed.`);
-                console.log(`Playback Rate: ${v}.`);
-            }
-        });
-
-        document.addEventListener("keydown", (event) => {
-            const keyName = event.key;
-
-            if (keyName === "d") {
+            } else if (keyName === "d") {
+                player.setPlaybackRate(player.getPlaybackRate() + 0.1);
                 console.log(`${keyName} pressed.`)
             }
         });
@@ -67,7 +85,6 @@ function keyControls(event) {
         /* Logic:
             Key press -> check (0.10 <= V <= 5) -> update V if 's' or 'd' pressed -> repeat!
         */
-        
 }
 
 
@@ -80,15 +97,17 @@ function handleUrlSubmit(event) {
     // grabbing id w/ function getEmbedId(url, id)
     yt_id = getEmbedId(userUrl);
 
-    
     player = new YT.Player('player', {
         height: '480',
         width: '854',
         videoId: yt_id,
+        playerVars: { 'controls': 0 },
         events: {
-            'onReady': keyControls //test
+            'onReady': onPlayerReady
         }
     });   
+
+    
     
     return false; // prevents form from submitting
 }
