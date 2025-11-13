@@ -28,6 +28,8 @@ firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 var yt_id; // for the embed id
 var player;
 const overlay = document.querySelector(".overlay");
+var playing = false;
+//const keyOverlay = document.querySelector(".overlay").focus();
 
 // function to get embed ID
 function getEmbedId(url) {
@@ -40,34 +42,41 @@ function getEmbedId(url) {
 
 
 function onPlayerReady(event) {
-    console.log(player.getAvailablePlaybackRates());
-    // document.addEventListener("keydown", function(e) {
-    //     speedControls(e);
-    // });
-    // document.addEventListener("click", function(c) {
-    //     playPauseVideo(c);
-    // });
-    document.addEventListener("keydown", function(e) {
-    speedControls(e);
-    });
+    //console.log(player.getAvailablePlaybackRates());
+    
     overlay.addEventListener("click", function(c) {
     playPauseVideo(c);
     });
+
+    document.addEventListener("keydown", function(e) {
+    speedControls(e);
+    });
+}
+
+// !!!
+function onPlayerStateChange(event) {
+    const state = player.getPlayerState();
+    if (state === YT.PlayerState.PAUSED || state === YT.PlayerState.CUED) {
+        playing = false;
+    } else if (state === YT.PlayerState.PLAYING) {
+        playing = true;
+    }
 }
 
 
 function playPauseVideo(event) {
-    //overlay.addEventListener("click", (event) => {
     const mClick = event.mouseClick;
     const state = player.getPlayerState();
 
     if (state === YT.PlayerState.PAUSED || state === YT.PlayerState.CUED) {
         player.playVideo();
+        console.log(state);
+        console.log(playing);
     } else if (state === YT.PlayerState.PLAYING) {
         player.pauseVideo();
+        console.log(state);
+        console.log(playing);
     }
-
-    //});    
 }
 
 
@@ -75,23 +84,15 @@ function speedControls(event) {
     var v = player.getPlaybackRate();
 
     const keyName = event.key;
-    if (keyName === "x") {
-        player.setPlaybackRate(10);
-        console.log(`${player.getPlaybackRate()} x - 10x speed`);
-        console.log(`${keyName} max speed pressed.`);
-        // this sets it to 2x speed then once video is playing just 1x speed
-    } 
+
     if (keyName === "s" && (v >= 0.1 || v <= 5)) {
-        //event.target.setPlaybackRate(v-0.1);
-        player.setPlaybackRate(player.getPlaybackRate() - 0.1);
-        console.log(`${player.getPlaybackRate()} s - speed`);
+        player.setPlaybackRate(v - 0.25);
+        console.log(`${v} s - speed`);
         console.log(`${keyName} pressed.`);
     } else if (keyName === "d") {
-        player.setPlaybackRate(player.getPlaybackRate() + 0.1);
+        player.setPlaybackRate(player.getPlaybackRate() + 0.25);
         console.log(`${player.getPlaybackRate()} d - speed`);
         console.log(`${keyName} pressed.`)
-        // ^ these sequences repeat 3 times, then each additional +0.1 will increase the repeat by 1
-            // also capping out at 0.25x to 2x speed
     }
 }
 
@@ -112,7 +113,8 @@ function handleUrlSubmit(event) {
         videoId: yt_id,
         playerVars: { 'controls': 0 },
         events: {
-            'onReady': onPlayerReady
+            'onReady': onPlayerReady,
+            'onStateChange': onPlayerStateChange
         }
     });   
 
