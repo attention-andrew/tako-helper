@@ -39,53 +39,62 @@ function getEmbedId(url) {
 }
 
 
-// TODO: [ ] - make s & d speed controls in increments of 10% speed change
 function onPlayerReady(event) {
+    console.log(player.getAvailablePlaybackRates());
+    // document.addEventListener("keydown", function(e) {
+    //     speedControls(e);
+    // });
+    // document.addEventListener("click", function(c) {
+    //     playPauseVideo(c);
+    // });
     document.addEventListener("keydown", function(e) {
-        speedControls(e);
+    speedControls(e);
     });
-    // ADD STUFF HERE FOR PLAY/PAUSE!!!!!!!!!!!!!!!!!!!!!!
+    overlay.addEventListener("click", function(c) {
+    playPauseVideo(c);
+    });
 }
-
 
 
 function playPauseVideo(event) {
-    overlay.addEventListener("click", (event) => {
-        const mClick = event.mouseClick;
+    //overlay.addEventListener("click", (event) => {
+    const mClick = event.mouseClick;
+    const state = player.getPlayerState();
 
-        if (event.data == YT.PlayerState.PAUSED) {
-            player.playVideo();
-        } else if (event.data == YT.PlayerState.PLAYING) {
-            player.pauseVideo();
-        }
+    if (state === YT.PlayerState.PAUSED || state === YT.PlayerState.CUED) {
+        player.playVideo();
+    } else if (state === YT.PlayerState.PLAYING) {
+        player.pauseVideo();
+    }
 
-    });    
+    //});    
 }
-
 
 
 function speedControls(event) {
     var v = player.getPlaybackRate();
 
-    document.addEventListener("keydown", (event) => {
-            const keyName = event.key;
-            if (keyName === "s" && (v >= 0.1 || v <= 5)) {
-                //event.target.setPlaybackRate(v-0.1);
-                player.setPlaybackRate(player.getPlaybackRate() - 0.1);
-                console.log(`${player.getPlaybackRate()} player.getPlaybackRate`);
-                console.log(`${keyName} pressed.`);
-            } else if (keyName === "d") {
-                player.setPlaybackRate(player.getPlaybackRate() + 0.1);
-                console.log(`${keyName} pressed.`)
-            }
-        });
-
-        // TODO: [ ] - use 'getPlaybackRate' & 'setPlaybackRate(*rate)' to bind hotkeys with
-            // 'onPlaybackRateChange' - "fires" when vid playback rate *changes*
-        /* Logic:
-            Key press -> check (0.10 <= V <= 5) -> update V if 's' or 'd' pressed -> repeat!
-        */
+    const keyName = event.key;
+    if (keyName === "x") {
+        player.setPlaybackRate(10);
+        console.log(`${player.getPlaybackRate()} x - 10x speed`);
+        console.log(`${keyName} max speed pressed.`);
+        // this sets it to 2x speed then once video is playing just 1x speed
+    } 
+    if (keyName === "s" && (v >= 0.1 || v <= 5)) {
+        //event.target.setPlaybackRate(v-0.1);
+        player.setPlaybackRate(player.getPlaybackRate() - 0.1);
+        console.log(`${player.getPlaybackRate()} s - speed`);
+        console.log(`${keyName} pressed.`);
+    } else if (keyName === "d") {
+        player.setPlaybackRate(player.getPlaybackRate() + 0.1);
+        console.log(`${player.getPlaybackRate()} d - speed`);
+        console.log(`${keyName} pressed.`)
+        // ^ these sequences repeat 3 times, then each additional +0.1 will increase the repeat by 1
+            // also capping out at 0.25x to 2x speed
+    }
 }
+
 
 
 
@@ -107,8 +116,6 @@ function handleUrlSubmit(event) {
         }
     });   
 
-    
-    
     return false; // prevents form from submitting
 }
 
