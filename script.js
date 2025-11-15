@@ -43,9 +43,9 @@ function getEmbedId(url) {
 function onPlayerReady(event) {
     //console.log(player.getAvailablePlaybackRates());
     
-    overlay.addEventListener("click", function(c) {
-    playPauseVideo(c);
-    });
+    // overlay.addEventListener("click", function(c) {
+    // playPauseVideo(c);
+    // });
 
     document.addEventListener("keydown", function(e) {
     speedControls(e);
@@ -80,30 +80,21 @@ function playPauseVideo(event) {
 
 
 
-//      currently, v is updated within the if/else statements
-//      var v will grab '1' always
-function speedControls(event) {
-if (playing) {
-    setTimeout(() => {
-    player.setPlaybackRate(1.5);
-    console.log(`${player.getPlaybackRate()} this is the 1.5 rate (in theory)`); // testing pbr after manually setting
-}, 2000);
-}
 
+function speedControls(event) {
     var v = player.getPlaybackRate();
-    console.log(`${v} Playback rate before S or D`); // logs 1, even when s = 0.75
 
     const keyName = event.key;
 
-    if (playing && (keyName === "s" && (v >= 0.25 && v <= 2))) {
-        v -= 0.25;
+    //if (playing && (keyName === "s" && (v >= 0.1 && v <= 5))) {
+    if (keyName === "s" && (v >= 0.1 && v <= 5)) {
+        v -= 0.1;
         player.setPlaybackRate(v);
         console.log(`${v} s - speed`);
         console.log(`${keyName} pressed.`);
-    } else if (playing && keyName === "d") {
-        v += 0.25;
+    } else if (keyName === "d" && (v >= 0.1 && v <= 5)) {
+        v += 0.1;
         player.setPlaybackRate(v);
-        console.log(`${player.getPlaybackRate()} d - speed "getPlaybackRate`);
         console.log(`${v} d - speed`);
         console.log(`${keyName} pressed.`)
     } 
@@ -124,7 +115,10 @@ function handleUrlSubmit(event) {
         height: '480',
         width: '854',
         videoId: yt_id,
-        //playerVars: { 'controls': 0 },
+        playerVars: { 
+            'controls': 1,
+            'modestbranding': 1
+        },
         events: {
             'onReady': onPlayerReady,
             'onStateChange': onPlayerStateChange
