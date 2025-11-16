@@ -27,7 +27,6 @@ firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
 var yt_id; // for the embed id
 var player;
-const overlay = document.querySelector(".overlay");
 var playing = false;
 
 // function to get embed ID
@@ -41,18 +40,18 @@ function getEmbedId(url) {
 
 
 function onPlayerReady(event) {
-    //console.log(player.getAvailablePlaybackRates());
-    
-    // overlay.addEventListener("click", function(c) {
-    // playPauseVideo(c);
-    // });
-
+    // TODO: ADD BUTTONS FOR PB SPEED to this v function
     document.addEventListener("keydown", function(e) {
     speedControls(e);
     });
+
+
+    const speedControlDiv = document.createElement('div');
+    speedControlDiv.textContent = 'Test 123: ';         // need this to be updated dynamically
+    document.getElementsByClassName('container')[0].appendChild(speedControlDiv);
 }
 
-// !!!
+
 function onPlayerStateChange(event) {
     const state = player.getPlayerState();
     if (state === YT.PlayerState.PAUSED || state === YT.PlayerState.CUED) {
@@ -87,12 +86,12 @@ function speedControls(event) {
     const keyName = event.key;
 
     //if (playing && (keyName === "s" && (v >= 0.1 && v <= 5))) {
-    if (keyName === "s" && (v >= 0.1 && v <= 5)) {
+    if (keyName === "s" && (v >= 0.2 && v <= 4)) {
         v -= 0.1;
         player.setPlaybackRate(v);
         console.log(`${v} s - speed`);
         console.log(`${keyName} pressed.`);
-    } else if (keyName === "d" && (v >= 0.1 && v <= 5)) {
+    } else if (keyName === "d" && (v >= 0.2 && v <= 4)) {
         v += 0.1;
         player.setPlaybackRate(v);
         console.log(`${v} d - speed`);
