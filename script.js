@@ -28,29 +28,15 @@ var yt_id; // for the embed id
 var player;
 var playing = false;
 var currentPlayback = "";
+const currentPlaybackDiv = document.getElementById("current-playback");
 const speedControlsDiv = document.getElementById("speed-controls");
 
-// function to get embed ID
-function getEmbedId(url) {
 
+function getEmbedId(url) {
     let videoId = url.match(/(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^&\n]{11})/);
 
     return(videoId[1]);
-
 }
-
-
-function onPlayerReady(event) {
-    // TODO: ADD BUTTONS FOR PB SPEED to this v function
-    document.addEventListener("keydown", function(e) {
-    speedControls(e);
-    });
-
-    currentPlayback = "Playback Speed: 1";
-    speedControlsDiv.textContent = currentPlayback;
-    
-}
-
 
 function onPlayerStateChange(event) {
     const state = player.getPlayerState();
@@ -69,7 +55,7 @@ function playPauseVideo(event) {
     if (state === YT.PlayerState.PAUSED || state === YT.PlayerState.CUED) {
         player.playVideo();
         console.log(state);
-        console.log(playing);
+        console.log(playing); // not sure y these aren't working
     } else if (state === YT.PlayerState.PLAYING) {
         player.pauseVideo();
         console.log(state);
@@ -77,10 +63,39 @@ function playPauseVideo(event) {
     }
 }
 
+
+function onPlayerReady(event) {
+    // TODO: ADD BUTTONS FOR PB SPEED to this v function
+    //  - 3 buttons: <-0.1 Reset +0.1>
+
+    const slow10 = document.createElement('button');
+    const reset = document.createElement('button');
+    const speed10 = document.createElement('button');
+    slow10.textContent = '< -0.1';
+    reset.textContent = 'Reset';
+    speed10.textContent = '+0.1 >';
+    speedControlsDiv.appendChild(slow10);
+    speedControlsDiv.appendChild(reset);
+    speedControlsDiv.appendChild(speed10);
+
+
+    document.addEventListener("keydown", function(e) {
+        speedControls(e);
+    });
+
+    document.addEventListener("click", function(e) {
+        speedControls(e);
+    });
+
+    currentPlayback = "Playback Speed: 1";
+    currentPlaybackDiv.textContent = currentPlayback;
+
+}
+
 function setPlaybackRateDiv(event) {
     var x = player.getPlaybackRate();
     currentPlayback = "Playback Speed: " + x;
-    speedControlsDiv.textContent = currentPlayback;
+    currentPlaybackDiv.textContent = currentPlayback;
 }
 
 
@@ -88,9 +103,12 @@ function speedControls(event) {
     var v = player.getPlaybackRate();
 
     const keyName = event.key;
+    const buttonPress = event.button;
+    console.log(typeof(buttonPress));
+    console.log(buttonPress);
+    
 
-    //if (playing && (keyName === "s" && (v >= 0.1 && v <= 5))) {
-    if (keyName === "s" && v <= 4) {
+    if ((keyName === "s" || buttonPress === 0)  && v <= 4) {
         if (v === 0.3) {
             //v = 0.3;
         } else
@@ -99,7 +117,7 @@ function speedControls(event) {
         v += 0.1;
     } 
 
-    if (keyName === "s" || keyName === "d") {
+    if (keyName === "s" || keyName === "d" || buttonPress === 0) {
         v = Math.round((v + Number.EPSILON) * 100) / 100;
         player.setPlaybackRate(v);
 
@@ -107,13 +125,14 @@ function speedControls(event) {
         currentPlayback = "Playback Speed: " + v.toString();
         speedControlsDiv.textContent = currentPlayback;
 
-        
         console.log(`${v} - speed`);
         console.log(`${keyName} pressed.`);
+
+
+            console.log(typeof(buttonPress));
+            console.log(buttonPress); // BREAKS
     }
 }
-
-
 
 
 // function for when user submits url, grabs the Value
