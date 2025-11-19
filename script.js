@@ -8,6 +8,7 @@ TODO:
     [ ] - make s & d speed controls in increments of 10% speed change
         - problems:
             - 1: only when I click off the video is when my keyControls() works
+    [ ] - once a video is loaded, you can't load a new one / override the player
 */
 
 // using YT-API
@@ -78,14 +79,22 @@ function onPlayerReady(event) {
     speedControlsDiv.appendChild(reset);
     speedControlsDiv.appendChild(speed10);
 
+    const buttons = [ slow10, reset, speed10];
+
+    buttons.forEach((button, index) => {
+        button.addEventListener("click", function(e) {
+            speedControls(e, index);
+            console.log(`Button at index ${index}: ${button}`);
+            console.log(`Button at index ${index + 1}: ${button}`);
+            console.log(`Button at index ${index + 2}: ${button}`);
+        });
+    });
+
 
     document.addEventListener("keydown", function(e) {
         speedControls(e);
     });
 
-    document.addEventListener("click", function(e) {
-        speedControls(e);
-    });
 
     currentPlayback = "Playback Speed: 1";
     currentPlaybackDiv.textContent = currentPlayback;
@@ -99,38 +108,44 @@ function setPlaybackRateDiv(event) {
 }
 
 
-function speedControls(event) {
+function speedControls(event, index) {
     var v = player.getPlaybackRate();
 
     const keyName = event.key;
-    const buttonPress = event.button;
-    console.log(typeof(buttonPress));
-    console.log(buttonPress);
-    
 
     if ((keyName === "s" || buttonPress === 0)  && v <= 4) {
         if (v === 0.3) {
             //v = 0.3;
-        } else
+        } else if ((keyName === "s" || index === 0)  && v <= 4) {
         v -= 0.1;
-    } else if (keyName === "d" && (v >= 0.3 && v < 4)) {
+        }
+    if ((keyName === "s" || index === 0)  && v <= 4) {
+        v -= 0.1;
+    } else if ((keyName === "d" || index === 2) && (v >= 0.3 && v < 4)) {
         v += 0.1;
-    } 
+    } else if (index === 1) {
+        v = 1;
+        player.setPlaybackRate(v);
 
-    if (keyName === "s" || keyName === "d" || buttonPress === 0) {
+        currentPlayback = "Playback Speed: " + v.toString();
+        currentPlaybackDiv.textContent = currentPlayback;
+    }
+
+    if (keyName === "s" || keyName === "d" || index === 0 || index === 2) {
         v = Math.round((v + Number.EPSILON) * 100) / 100;
         player.setPlaybackRate(v);
 
 
         currentPlayback = "Playback Speed: " + v.toString();
-        speedControlsDiv.textContent = currentPlayback;
+        currentPlaybackDiv.textContent = currentPlayback;
 
         console.log(`${v} - speed`);
-        console.log(`${keyName} pressed.`);
+        if (keyName === "s" || keyName === "d") {
+            console.log(`${keyName} pressed.`);
+        } else if (index === 0 || index === 2) {
+            console.log(`Button ${index} pressed.`);
+        }
 
-
-            console.log(typeof(buttonPress));
-            console.log(buttonPress); // BREAKS
     }
 }
 
