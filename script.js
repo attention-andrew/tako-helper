@@ -5,8 +5,8 @@
 TODO:
     [x] - update function for handleUrlSubmit(event) to only grab id
         [x] - take user video 'id' & insert into player 'onYouTubeIframeAPIReady()'
-    [ ] - make s & d speed controls in increments of 10% speed change
-        - problems:
+    [x] - make s & d speed controls in increments of 10% speed change
+        - problems: (just accepting this prob)
             - 1: only when I click off the video is when my keyControls() works
     [ ] - once a video is loaded, you can't load a new one / override the player
 */
@@ -113,14 +113,12 @@ function speedControls(event, index) {
 
     const keyName = event.key;
 
-    if ((keyName === "s" || buttonPress === 0)  && v <= 4) {
+    if ((keyName === "s" || index === 0)  && v <= 4) {
         if (v === 0.3) {
             //v = 0.3;
         } else if ((keyName === "s" || index === 0)  && v <= 4) {
         v -= 0.1;
         }
-    if ((keyName === "s" || index === 0)  && v <= 4) {
-        v -= 0.1;
     } else if ((keyName === "d" || index === 2) && (v >= 0.3 && v < 4)) {
         v += 0.1;
     } else if (index === 1) {
@@ -152,7 +150,14 @@ function speedControls(event, index) {
 
 // function for when user submits url, grabs the Value
 function handleUrlSubmit(event) {
+
+    // if (typeof(player) === object) {
+    //     console.log(typeof(player));
+    //     location.reload();
+    // } else
+
     event.preventDefault(); // prevents from submitting normally
+
     const userUrl = document.getElementById('youtube_url').value;
 
     // grabbing id w/ function getEmbedId(url, id)
@@ -172,6 +177,9 @@ function handleUrlSubmit(event) {
             'onPlaybackRateChange': setPlaybackRateDiv
         }
     });   
+
+    console.log(player);
+    console.log(typeof(player)); 
 
     return false; // prevents form from submitting
 }
