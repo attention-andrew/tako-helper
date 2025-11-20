@@ -27,6 +27,7 @@ firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
 var yt_id; // for the embed id
 var player;
+let destroyingPlayer = false;
 var playing = false;
 var currentPlayback = "";
 const currentPlaybackDiv = document.getElementById("current-playback");
@@ -66,8 +67,6 @@ function playPauseVideo(event) {
 
 
 function onPlayerReady(event) {
-    // TODO: ADD BUTTONS FOR PB SPEED to this v function
-    //  - 3 buttons: <-0.1 Reset +0.1>
 
     const slow10 = document.createElement('button');
     const reset = document.createElement('button');
@@ -79,14 +78,11 @@ function onPlayerReady(event) {
     speedControlsDiv.appendChild(reset);
     speedControlsDiv.appendChild(speed10);
 
-    const buttons = [ slow10, reset, speed10];
+    const buttons = [ slow10, reset, speed10 ];
 
     buttons.forEach((button, index) => {
         button.addEventListener("click", function(e) {
             speedControls(e, index);
-            console.log(`Button at index ${index}: ${button}`);
-            console.log(`Button at index ${index + 1}: ${button}`);
-            console.log(`Button at index ${index + 2}: ${button}`);
         });
     });
 
@@ -109,7 +105,7 @@ function setPlaybackRateDiv(event) {
 
 
 function speedControls(event, index) {
-    var v = player.getPlaybackRate();
+    var v = player.getPlaybackRate(); // on 2nd play submit, this is undefined
 
     const keyName = event.key;
 
@@ -150,12 +146,6 @@ function speedControls(event, index) {
 
 // function for when user submits url, grabs the Value
 function handleUrlSubmit(event) {
-
-    // if (typeof(player) === object) {
-    //     console.log(typeof(player));
-    //     location.reload();
-    // } else
-
     event.preventDefault(); // prevents from submitting normally
 
     const userUrl = document.getElementById('youtube_url').value;
@@ -163,23 +153,50 @@ function handleUrlSubmit(event) {
     // grabbing id w/ function getEmbedId(url, id)
     yt_id = getEmbedId(userUrl);
 
-    player = new YT.Player('player', {
-        height: '480',
-        width: '854',
-        videoId: yt_id,
-        playerVars: { 
-            'controls': 1,
-            'modestbranding': 1
-        },
-        events: {
-            'onReady': onPlayerReady,
-            'onStateChange': onPlayerStateChange,
-            'onPlaybackRateChange': setPlaybackRateDiv
-        }
-    });   
+    if (player) {
+        destroyingPlayer = true;
 
-    console.log(player);
-    console.log(typeof(player)); 
+        console.log("player is defined now | time 2 destroy it");
+        player.destroy().then(() => { // player is undefined here for some reason?
+            destroyingPlayer = false;
+
+            // MAKE BELOW A FUNCTION INSTEAD OF CALLING TWICE
+            player = new YT.Player('player', { 
+            height: '480',
+            width: '854',
+            videoId: yt_id,
+            playerVars: { 
+                'controls': 1,
+                'modestbranding': 1
+            },
+            events: {
+                'onReady': onPlayerReady,
+                'onStateChange': onPlayerStateChange,
+                'onPlaybackRateChange': setPlaybackRateDiv
+            }
+        });
+    });
+
+    } else {
+        console.log("player is not defined, building initial player");
+        console.log("yt_id is: " + yt_id);
+     
+
+        player = new YT.Player('player', {
+            height: '480',
+            width: '854',
+            videoId: yt_id,
+            playerVars: { 
+                'controls': 1,
+                'modestbranding': 1
+            },
+            events: {
+                'onReady': onPlayerReady,
+                'onStateChange': onPlayerStateChange,
+                'onPlaybackRateChange': setPlaybackRateDiv
+            }
+        });   
+    }
 
     return false; // prevents form from submitting
 }
