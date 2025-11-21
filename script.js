@@ -27,7 +27,6 @@ firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
 var yt_id; // for the embed id
 var player;
-let destroyingPlayer = false;
 var playing = false;
 var currentPlayback = "";
 const currentPlaybackDiv = document.getElementById("current-playback");
@@ -144,6 +143,24 @@ function speedControls(event, index) {
 }
 
 
+function createPlayer() {
+    player = new YT.Player('player', { 
+    height: '480',
+    width: '854',
+    videoId: yt_id,
+    playerVars: { 
+        'controls': 1,
+        'modestbranding': 1
+    },
+    events: {
+        'onReady': onPlayerReady,
+        'onStateChange': onPlayerStateChange,
+        'onPlaybackRateChange': setPlaybackRateDiv
+    }
+    });
+}
+
+
 // function for when user submits url, grabs the Value
 function handleUrlSubmit(event) {
     event.preventDefault(); // prevents from submitting normally
@@ -154,48 +171,16 @@ function handleUrlSubmit(event) {
     yt_id = getEmbedId(userUrl);
 
     if (player) {
-        destroyingPlayer = true;
-
         console.log("player is defined now | time 2 destroy it");
-        player.destroy().then(() => { // player is undefined here for some reason?
-            destroyingPlayer = false;
+        player.destroy(); 
 
-            // MAKE BELOW A FUNCTION INSTEAD OF CALLING TWICE
-            player = new YT.Player('player', { 
-            height: '480',
-            width: '854',
-            videoId: yt_id,
-            playerVars: { 
-                'controls': 1,
-                'modestbranding': 1
-            },
-            events: {
-                'onReady': onPlayerReady,
-                'onStateChange': onPlayerStateChange,
-                'onPlaybackRateChange': setPlaybackRateDiv
-            }
-        });
-    });
+        createPlayer()
 
     } else {
         console.log("player is not defined, building initial player");
         console.log("yt_id is: " + yt_id);
      
-
-        player = new YT.Player('player', {
-            height: '480',
-            width: '854',
-            videoId: yt_id,
-            playerVars: { 
-                'controls': 1,
-                'modestbranding': 1
-            },
-            events: {
-                'onReady': onPlayerReady,
-                'onStateChange': onPlayerStateChange,
-                'onPlaybackRateChange': setPlaybackRateDiv
-            }
-        });   
+        createPlayer();
     }
 
     return false; // prevents form from submitting
