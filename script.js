@@ -8,7 +8,8 @@ TODO:
     [x] - make s & d speed controls in increments of 10% speed change
         - problems: (just accepting this prob)
             - 1: only when I click off the video is when my keyControls() works
-    [ ] - once a video is loaded, you can't load a new one / override the player
+    [x] - once a video is loaded, you can't load a new one / override the player
+    [ ] - loop functionality
 */
 
 // using YT-API
@@ -27,10 +28,17 @@ firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
 var yt_id; // for the embed id
 var player;
+var playerReady = false;
+var loopOn = false;
+var section = {
+    start: 0,
+    end: 5
+};
 var playing = false;
 var currentPlayback = "";
 const currentPlaybackDiv = document.getElementById("current-playback");
 const speedControlsDiv = document.getElementById("speed-controls");
+const loopBasicDiv = document.getElementById("loop-basic");
 
 
 function getEmbedId(url) {
@@ -46,8 +54,22 @@ function onPlayerStateChange(event) {
     } else if (state === YT.PlayerState.PLAYING) {
         playing = true;
     }
+
+    if ((playing || !playing) && loopOn) {
+        console.log("loop is on");
+        //*var duration = section.end - section.start * 2; (at 0.5 pbs)
+        var playerSpeed = player.getPlaybackRate();
+
+        // this will only be triggered on playerStateChange
+        //! need duration to change based on dynamic getPlaybackRate();
+
+            setTimeout(restartVideoSection, duration * 1000);
+    }
 }
 
+function restartVideoSection() {
+    player.seekTo(section.start);
+}
 
 function playPauseVideo(event) {
     const mClick = event.mouseClick;
@@ -67,32 +89,60 @@ function playPauseVideo(event) {
 
 function onPlayerReady(event) {
 
-    const slow10 = document.createElement('button');
-    const reset = document.createElement('button');
-    const speed10 = document.createElement('button');
-    slow10.textContent = '< -0.1';
-    reset.textContent = 'Reset';
-    speed10.textContent = '+0.1 >';
-    speedControlsDiv.appendChild(slow10);
-    speedControlsDiv.appendChild(reset);
-    speedControlsDiv.appendChild(speed10);
+    // creates playback speed buttons
+    if (playerReady === true) {
+        const slow10 = document.createElement('button');
+        const reset = document.createElement('button');
+        const speed10 = document.createElement('button');
+        slow10.textContent = '< -0.1';
+        reset.textContent = 'Reset';
+        speed10.textContent = '+0.1 >';
+        speedControlsDiv.appendChild(slow10);
+        speedControlsDiv.appendChild(reset);
+        speedControlsDiv.appendChild(speed10);
 
-    const buttons = [ slow10, reset, speed10 ];
+        const buttons = [ slow10, reset, speed10 ];
 
-    buttons.forEach((button, index) => {
-        button.addEventListener("click", function(e) {
-            speedControls(e, index);
+        buttons.forEach((button, index) => {
+            button.addEventListener("click", function(e) {
+                speedControls(e, index);
+            });
         });
-    });
-
+    }
 
     document.addEventListener("keydown", function(e) {
         speedControls(e);
     });
 
-
     currentPlayback = "Playback Speed: 1";
     currentPlaybackDiv.textContent = currentPlayback;
+
+    // create loop controls
+    if (playerReady === true) {
+        const loop = document.createElement('button');
+        loop.id = 'toggle-loop';
+        const back5 = document.createElement('button');
+        const foreward5 = document.createElement('button');
+        loop.textContent = 'Toggle Loop: Off';
+        back5.textContent = '-5s';
+        foreward5.textContent = '+5s';
+        loopBasicDiv.appendChild(loop);
+        loopBasicDiv.appendChild(back5);
+        loopBasicDiv.appendChild(foreward5);
+
+        const buttons = [ loop, back5, foreward5 ];
+
+        
+
+        buttons.forEach((button, index) => {
+            button.addEventListener("click", function(e) {
+                loopConrolBasic(e, index);
+            });
+        });
+
+        return loop;
+    }
+
 
 }
 
@@ -104,13 +154,13 @@ function setPlaybackRateDiv(event) {
 
 
 function speedControls(event, index) {
-    var v = player.getPlaybackRate(); // on 2nd play submit, this is undefined
+    var v = player.getPlaybackRate(); 
 
     const keyName = event.key;
 
     if ((keyName === "s" || index === 0)  && v <= 4) {
         if (v === 0.3) {
-            //v = 0.3;
+
         } else if ((keyName === "s" || index === 0)  && v <= 4) {
         v -= 0.1;
         }
@@ -142,6 +192,57 @@ function speedControls(event, index) {
     }
 }
 
+function loopConrolBasic(event, index) {
+    // use player.seekTo(number) to set the seek
+    // may need to do something like: start: num, end: num, loop: on & create new player
+        // player.loadVideoById({'videoId': 'bHQqvYy5KYo',
+        //              'startSeconds': 5,
+        //              'endSeconds': 60});
+
+
+    // !FROM STACKOVERFLOW | maybe best 4 advanced loopControls (or just combo here)
+    // var section = {
+    //     start: 30,
+    //     end: 33
+    // };
+
+    // * this is triggered when player is ready
+    // function onPlayerReady(event) {
+    //     player.seekTo(section.start);
+    //     player.playVideo();
+    // }
+
+    // * when playing, 
+    // function onPlayerStateChange(event) {
+    //     if (event.data == YT.PlayerState.PLAYING) {
+    //         var duration = section.end - section.start;
+    //         setTimeout(restartVideoSection, duration * 1000);
+    //     }
+    // }
+
+    // function restartVideoSection() {
+    //     player.seekTo(section.start);
+    // }
+
+    const loop = document.getElementById('toggle-loop');
+
+    console.log(loop.textContent + " " + loopOn);
+
+    if (index === 0 && loopOn === false) {
+        loop.textContent = 'Toggle Loop: On'
+        loopOn = true;
+
+    } else {
+        loop.textContent = 'Toggle Loop: Off'
+        loopOn = false;
+    }
+
+    //player.seekTo(22);
+
+    console.log(`Button ${index} pressed.`);
+
+}
+
 
 function createPlayer() {
     player = new YT.Player('player', { 
@@ -171,6 +272,7 @@ function handleUrlSubmit(event) {
     yt_id = getEmbedId(userUrl);
 
     if (player) {
+        playerReady = false;
         console.log("player is defined now | time 2 destroy it");
         player.destroy(); 
 
@@ -179,6 +281,7 @@ function handleUrlSubmit(event) {
     } else {
         console.log("player is not defined, building initial player");
         console.log("yt_id is: " + yt_id);
+        playerReady = true;
      
         createPlayer();
     }
