@@ -34,6 +34,7 @@ var section = {
     start: 0,
     end: 5
 };
+duration = section.end - section.start;
 var playing = false;
 var currentPlayback = "";
 const currentPlaybackDiv = document.getElementById("current-playback");
@@ -55,16 +56,6 @@ function onPlayerStateChange(event) {
         playing = true;
     }
 
-    if ((playing || !playing) && loopOn) {
-        console.log("loop is on");
-        //*var duration = section.end - section.start * 2; (at 0.5 pbs)
-        var playerSpeed = player.getPlaybackRate();
-
-        // this will only be triggered on playerStateChange
-        //! need duration to change based on dynamic getPlaybackRate();
-
-            setTimeout(restartVideoSection, duration * 1000);
-    }
 }
 
 function restartVideoSection() {
@@ -188,6 +179,17 @@ function speedControls(event, index) {
         } else if (index === 0 || index === 2) {
             console.log(`Button ${index} pressed.`);
         }
+
+
+        // setting the loop based on pbr
+        if ((playing || !playing) && loopOn) {
+        console.log("loop is on | duration is: " + duration);
+        //!   var timeout = (sectionDuration / playbackRate) * 1000; (THIS SHOULD WORK)
+        setTimeout(restartVideoSection, (duration / v) * 1000);
+
+        
+
+    }
 
     }
 }
