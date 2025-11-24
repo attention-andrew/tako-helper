@@ -30,6 +30,7 @@ var yt_id; // for the embed id
 var player;
 var playerReady = false;
 var loopOn = false;
+var speedToggleButton = false;
 var section = {
     start: 0,
     end: 5
@@ -56,10 +57,27 @@ function onPlayerStateChange(event) {
         playing = true;
     }
 
+    if ((event.data == YT.PlayerState.PLAYING || event.data == YT.PlayerState.CUED || event.data == YT.PlayerState.PAUSED) && loopOn) {
+    console.log("loop is on from loopConrolBasic | duration is: " + duration);
+    console.log(loopOn);
+    setTimeout(restartVideoSection, (duration / player.getPlaybackRate()) * 1000);
+    //* ^ need check to be continuous calc
+    }
+
+    if (speedToggleButton && loopOn) { //speedToggleButton needs to be created
+        setTimeout(restartVideoSection, durationCalculator());
+    } else if (speedToggleButton == false && loopOn) {
+        setTimeout(restartVideoSection, durationCalculator());
+    }
+
 }
 
 function restartVideoSection() {
     player.seekTo(section.start);
+}
+
+function durationCalculator() {
+    (duration / player.getPlaybackRate()) * 1000;
 }
 
 function playPauseVideo(event) {
@@ -123,8 +141,6 @@ function onPlayerReady(event) {
 
         const buttons = [ loop, back5, foreward5 ];
 
-        
-
         buttons.forEach((button, index) => {
             button.addEventListener("click", function(e) {
                 loopConrolBasic(e, index);
@@ -149,50 +165,80 @@ function speedControls(event, index) {
 
     const keyName = event.key;
 
-    if ((keyName === "s" || index === 0)  && v <= 4) {
-        if (v === 0.3) {
+    //* flag code
+    // if (index === 0 && speedToggleButton === false) {
+    //     speedToggleButton = true;
+    // } else {
+    //     speedToggleButton = false;
+    // }
+    //* end code
 
-        } else if ((keyName === "s" || index === 0)  && v <= 4) {
+
+    if ((keyName === "s" || index === 0)  && v <= 4) {
+        if (v === 0.3 && speedToggleButton === false) {
+            speedToggleButton = true;
+        } 
+        else if (v === 0.3 && speedToggleButton === true) {
+            speedToggleButton = false;
+        } 
+        else if (((keyName === "s" || index === 0) && speedToggleButton === false) && v <= 4) {
         v -= 0.1;
+        speedToggleButton = true;
+        } else if (((keyName === "s" || index === 0) && speedToggleButton === true) && v <= 4) {
+        v -= 0.1;
+        speedToggleButton = false;
         }
-    } else if ((keyName === "d" || index === 2) && (v >= 0.3 && v < 4)) {
+    } else if (((keyName === "d" || index === 2) && speedToggleButton === false) && (v >= 0.3 && v < 4)) {
         v += 0.1;
-    } else if (index === 1) {
+        speedToggleButton = true;
+        } else if (((keyName === "d" || index === 2) && speedToggleButton === true) && (v >= 0.3 && v < 4)) {
+        v += 0.1;
+        speedToggleButton = false;
+        }
+    
+    //else if (((keyName === "d" || index === 2) && speedToggleButton === false) && (v >= 0.3 && v < 4)) {
+    //     v += 0.1;
+    //     speedToggleButton = true;
+    //     console.log("this elseif 'd-press' may break it")
+    // } else {
+    //     v += 0.1;
+    //     speedToggleButton = false;
+    // }
+    if (index === 1 && speedToggleButton === false) {
         v = 1;
         player.setPlaybackRate(v);
+       // speedToggleButton = true;
 
         currentPlayback = "Playback Speed: " + v.toString();
         currentPlaybackDiv.textContent = currentPlayback;
+    // } else {
+    //     v = 1;
+    //     player.setPlaybackRate(v);
+    //     speedToggleButton = false;
+
+    //     currentPlayback = "Playback Speed: " + v.toString();
+    //     currentPlaybackDiv.textContent = currentPlayback;
     }
 
+
+    // sets pbr & debug stuff
     if (keyName === "s" || keyName === "d" || index === 0 || index === 2) {
         v = Math.round((v + Number.EPSILON) * 100) / 100;
         player.setPlaybackRate(v);
-
 
         currentPlayback = "Playback Speed: " + v.toString();
         currentPlaybackDiv.textContent = currentPlayback;
 
         console.log(`${v} - speed`);
         if (keyName === "s" || keyName === "d") {
-            console.log(`${keyName} pressed.`);
+            console.log(`${keyName} pressed. SpeedToggle: ${speedToggleButton}`);
         } else if (index === 0 || index === 2) {
-            console.log(`Button ${index} pressed.`);
+            console.log(`Button ${index} pressed. SpeedToggle: ${speedToggleButton}`);
         }
-
-
-        // setting the loop based on pbr
-        if ((playing || !playing) && loopOn) {
-        console.log("loop is on | duration is: " + duration);
-        //!   var timeout = (sectionDuration / playbackRate) * 1000; (THIS SHOULD WORK)
-        setTimeout(restartVideoSection, (duration / v) * 1000);
-
-        
-
-    }
 
     }
 }
+
 
 function loopConrolBasic(event, index) {
     // use player.seekTo(number) to set the seek
@@ -228,20 +274,18 @@ function loopConrolBasic(event, index) {
 
     const loop = document.getElementById('toggle-loop');
 
-    console.log(loop.textContent + " " + loopOn);
-
     if (index === 0 && loopOn === false) {
         loop.textContent = 'Toggle Loop: On'
         loopOn = true;
-
+        restartVideoSection();
+        // console.log(loop.textContent + " " + loopOn);
     } else {
         loop.textContent = 'Toggle Loop: Off'
         loopOn = false;
+        // console.log(loop.textContent + " " + loopOn);
     }
 
-    //player.seekTo(22);
-
-    console.log(`Button ${index} pressed.`);
+    // console.log(`Button ${index} pressed.`);
 
 }
 
