@@ -31,7 +31,7 @@ var player;
 var playerReady = false;
 var loopOn = false;
 var speedToggleButton = false;
-var section = {
+var section = { // need to make dynamic for +-5s & custom loops
     start: 0,
     end: 5
 };
@@ -57,18 +57,25 @@ function onPlayerStateChange(event) {
         playing = true;
     }
 
-    if ((event.data == YT.PlayerState.PLAYING || event.data == YT.PlayerState.CUED || event.data == YT.PlayerState.PAUSED) && loopOn) {
-    console.log("loop is on from loopConrolBasic | duration is: " + duration);
-    console.log(loopOn);
-    setTimeout(restartVideoSection, (duration / player.getPlaybackRate()) * 1000);
-    //* ^ need check to be continuous calc
-    }
+    // if ((playing || !playing) && loopOn) {
+    //     if (loopOn) {
+    //         setTimeout(restartVideoSection, durationCalculator());
+    //         console.log("loop is:", loopOn, "On from loopConrolBasic | duration is:", duration);
+    //     }
+    //     else if (speedToggleButton && loopOn) {
+    //         setTimeout(restartVideoSection, durationCalculator());
+    //         console.log("speed toggle:", speedToggleButton, "loop:", loopOn);
+    //     } else if (!speedToggleButton && loopOn) {
+    //         setTimeout(restartVideoSection, durationCalculator());
+    //         console.log("speed toggle: ", speedToggleButton, "loop: ", loopOn);
+    //     }
+    // }
 
-    if (speedToggleButton && loopOn) { //speedToggleButton needs to be created
-        setTimeout(restartVideoSection, durationCalculator());
-    } else if (speedToggleButton == false && loopOn) {
-        setTimeout(restartVideoSection, durationCalculator());
-    }
+    // if (speedToggleButton && loopOn) { //speedToggleButton needs to be created
+    //     setTimeout(restartVideoSection, durationCalculator());
+    // } else if (!speedToggleButton && loopOn) {
+    //     setTimeout(restartVideoSection, durationCalculator());
+    // }
 
 }
 
@@ -98,6 +105,7 @@ function playPauseVideo(event) {
 
 function onPlayerReady(event) {
 
+    console.log(playing);
     // creates playback speed buttons
     if (playerReady === true) {
         const slow10 = document.createElement('button');
@@ -147,9 +155,8 @@ function onPlayerReady(event) {
             });
         });
 
-        return loop;
+        return loop; // not sure this is needed
     }
-
 
 }
 
@@ -161,75 +168,40 @@ function setPlaybackRateDiv(event) {
 
 
 function speedControls(event, index) {
-    var v = player.getPlaybackRate(); 
+    let v = player.getPlaybackRate();
+    v = (Math.round((v + Number.EPSILON) * 10) / 10);
 
     const keyName = event.key;
 
-    //* flag code
-    // if (index === 0 && speedToggleButton === false) {
-    //     speedToggleButton = true;
-    // } else {
-    //     speedToggleButton = false;
-    // }
-    //* end code
+    if ((keyName === "s" || index === 0) && v <= 4) {
+        v = Math.round((v - 0.1 + Number.EPSILON) * 100) / 100;
+        v = Math.max(v,0.3); // prevents going below 0.3
+        speedToggleButton = !speedToggleButton; // bruh this is much easier toggle
+    }
 
-
-    if ((keyName === "s" || index === 0)  && v <= 4) {
-        if (v === 0.3 && speedToggleButton === false) {
-            speedToggleButton = true;
-        } 
-        else if (v === 0.3 && speedToggleButton === true) {
-            speedToggleButton = false;
-        } 
-        else if (((keyName === "s" || index === 0) && speedToggleButton === false) && v <= 4) {
-        v -= 0.1;
-        speedToggleButton = true;
-        } else if (((keyName === "s" || index === 0) && speedToggleButton === true) && v <= 4) {
-        v -= 0.1;
-        speedToggleButton = false;
-        }
-    } else if (((keyName === "d" || index === 2) && speedToggleButton === false) && (v >= 0.3 && v < 4)) {
-        v += 0.1;
-        speedToggleButton = true;
-        } else if (((keyName === "d" || index === 2) && speedToggleButton === true) && (v >= 0.3 && v < 4)) {
-        v += 0.1;
-        speedToggleButton = false;
-        }
+    if ((keyName === "d" || index === 2) && v < 4) {
+        v = Math.round((v + 0.1 + Number.EPSILON) * 100) / 100;
+        v = Math.min(v,4);
+        speedToggleButton = !speedToggleButton; 
+    }
     
-    //else if (((keyName === "d" || index === 2) && speedToggleButton === false) && (v >= 0.3 && v < 4)) {
-    //     v += 0.1;
-    //     speedToggleButton = true;
-    //     console.log("this elseif 'd-press' may break it")
-    // } else {
-    //     v += 0.1;
-    //     speedToggleButton = false;
-    // }
-    if (index === 1 && speedToggleButton === false) {
-        v = 1;
+    if (index === 1) {
+        v = 1;  
         player.setPlaybackRate(v);
-       // speedToggleButton = true;
+        speedToggleButton = !speedToggleButton; 
 
         currentPlayback = "Playback Speed: " + v.toString();
         currentPlaybackDiv.textContent = currentPlayback;
-    // } else {
-    //     v = 1;
-    //     player.setPlaybackRate(v);
-    //     speedToggleButton = false;
-
-    //     currentPlayback = "Playback Speed: " + v.toString();
-    //     currentPlaybackDiv.textContent = currentPlayback;
+        console.log(`Button ${index} pressed. SpeedToggle: ${speedToggleButton}`);
     }
-
 
     // sets pbr & debug stuff
     if (keyName === "s" || keyName === "d" || index === 0 || index === 2) {
-        v = Math.round((v + Number.EPSILON) * 100) / 100;
         player.setPlaybackRate(v);
 
         currentPlayback = "Playback Speed: " + v.toString();
         currentPlaybackDiv.textContent = currentPlayback;
 
-        console.log(`${v} - speed`);
         if (keyName === "s" || keyName === "d") {
             console.log(`${keyName} pressed. SpeedToggle: ${speedToggleButton}`);
         } else if (index === 0 || index === 2) {
@@ -278,11 +250,9 @@ function loopConrolBasic(event, index) {
         loop.textContent = 'Toggle Loop: On'
         loopOn = true;
         restartVideoSection();
-        // console.log(loop.textContent + " " + loopOn);
     } else {
         loop.textContent = 'Toggle Loop: Off'
         loopOn = false;
-        // console.log(loop.textContent + " " + loopOn);
     }
 
     // console.log(`Button ${index} pressed.`);
