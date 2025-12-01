@@ -2,14 +2,15 @@
 // Script for loading YTV, speed controls, & looping video @ certain times¬
 
 /*
-TODO:
+TODO: :3
     [x] - update function for handleUrlSubmit(event) to only grab id
         [x] - take user video 'id' & insert into player 'onYouTubeIframeAPIReady()'
     [x] - make s & d speed controls in increments of 10% speed change
         - problems: (just accepting this prob)
             - 1: only when I click off the video is when my keyControls() works
     [x] - once a video is loaded, you can't load a new one / override the player
-    [ ] - loop functionality
+    ?[ ] - loop functionality | Where to put 'durationCalculator()' to update when speedToggle changes | needs to be set when toggle turns on, then re-set when speedToggle changes
+    * - thinking 
 */
 
 // using YT-API
@@ -105,7 +106,6 @@ function playPauseVideo(event) {
 
 function onPlayerReady(event) {
 
-    console.log(playing);
     // creates playback speed buttons
     if (playerReady === true) {
         const slow10 = document.createElement('button');
@@ -173,15 +173,15 @@ function speedControls(event, index) {
 
     const keyName = event.key;
 
-    if ((keyName === "s" || index === 0) && v <= 4) {
+    if ((keyName === "s" || index === 0) && v <= 2) { // setting max 2 | seems like 2+ PBS supp are mixed
         v = Math.round((v - 0.1 + Number.EPSILON) * 100) / 100;
         v = Math.max(v,0.3); // prevents going below 0.3
         speedToggleButton = !speedToggleButton; // bruh this is much easier toggle
     }
 
-    if ((keyName === "d" || index === 2) && v < 4) {
+    if ((keyName === "d" || index === 2) && v < 3) {
         v = Math.round((v + 0.1 + Number.EPSILON) * 100) / 100;
-        v = Math.min(v,4);
+        v = Math.min(v,2);
         speedToggleButton = !speedToggleButton; 
     }
     
@@ -220,7 +220,7 @@ function loopConrolBasic(event, index) {
         //              'endSeconds': 60});
 
 
-    // !FROM STACKOVERFLOW | maybe best 4 advanced loopControls (or just combo here)
+    // ?FROM STACKOVERFLOW | maybe best 4 advanced loopControls (or just combo here)
     // var section = {
     //     start: 30,
     //     end: 33
@@ -249,13 +249,33 @@ function loopConrolBasic(event, index) {
     if (index === 0 && loopOn === false) {
         loop.textContent = 'Toggle Loop: On'
         loopOn = true;
-        restartVideoSection();
+        restartVideoSection(); // currently hard-coded: 0
+        setTimeout(restartVideoSection, durationCalculator());
+        console.log('Loop is toggled:', setTimeout(restartVideoSection, durationCalculator()));
+        // toggling on/off adds '2 sec' to 'setTimeout'
     } else {
         loop.textContent = 'Toggle Loop: Off'
         loopOn = false;
+        console.log('Loop is toggled off');
     }
 
     // console.log(`Button ${index} pressed.`);
+
+
+    //!TEST HERE
+//     if ((playing || !playing) && loopOn) {
+//     if (loopOn) {
+//         setTimeout(restartVideoSection, durationCalculator());
+//         console.log("loop is:", loopOn, "On from loopConrolBasic | duration is:", duration);
+//     }
+//     else if (speedToggleButton && loopOn) {
+//         setTimeout(restartVideoSection, durationCalculator());
+//         console.log("speed toggle:", speedToggleButton, "loop:", loopOn);
+//     } else if (!speedToggleButton && loopOn) {
+//         setTimeout(restartVideoSection, durationCalculator());
+//         console.log("speed toggle: ", speedToggleButton, "loop: ", loopOn);
+//     }
+// }
 
 }
 
