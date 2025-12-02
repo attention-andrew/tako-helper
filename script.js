@@ -30,11 +30,12 @@ firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 var yt_id; // for the embed id
 var player;
 var playerReady = false;
-var loopOn = false;
+var loop = false;
+var done = false;
 var speedToggleButton = false;
 var section = { // need to make dynamic for +-5s & custom loops
     start: 0,
-    end: 5
+    end: 3
 };
 duration = section.end - section.start;
 var playing = false;
@@ -58,25 +59,11 @@ function onPlayerStateChange(event) {
         playing = true;
     }
 
-    // if ((playing || !playing) && loopOn) {
-    //     if (loopOn) {
-    //         setTimeout(restartVideoSection, durationCalculator());
-    //         console.log("loop is:", loopOn, "On from loopConrolBasic | duration is:", duration);
-    //     }
-    //     else if (speedToggleButton && loopOn) {
-    //         setTimeout(restartVideoSection, durationCalculator());
-    //         console.log("speed toggle:", speedToggleButton, "loop:", loopOn);
-    //     } else if (!speedToggleButton && loopOn) {
-    //         setTimeout(restartVideoSection, durationCalculator());
-    //         console.log("speed toggle: ", speedToggleButton, "loop: ", loopOn);
-    //     }
-    // }
-
-    // if (speedToggleButton && loopOn) { //speedToggleButton needs to be created
-    //     setTimeout(restartVideoSection, durationCalculator());
-    // } else if (!speedToggleButton && loopOn) {
-    //     setTimeout(restartVideoSection, durationCalculator());
-    // }
+    if (loop && state === YT.PlayerState.PLAYING && !done) {
+        setTimeout(restartVideoSection, durationCalculator());
+        console.log('Loop is toggled:', setTimeout(restartVideoSection, durationCalculator()));
+        done = true; // currently loops once
+    }
 
 }
 
@@ -85,7 +72,7 @@ function restartVideoSection() {
 }
 
 function durationCalculator() {
-    (duration / player.getPlaybackRate()) * 1000;
+    return (duration / player.getPlaybackRate()) * 1000;
 }
 
 function playPauseVideo(event) {
@@ -136,18 +123,18 @@ function onPlayerReady(event) {
 
     // create loop controls
     if (playerReady === true) {
-        const loop = document.createElement('button');
-        loop.id = 'toggle-loop';
+        const loopTog = document.createElement('button');
+        loopTog.id = 'toggle-loop';
         const back5 = document.createElement('button');
         const foreward5 = document.createElement('button');
-        loop.textContent = 'Toggle Loop: Off';
+        loopTog.textContent = 'Toggle Loop: Off';
         back5.textContent = '-5s';
         foreward5.textContent = '+5s';
-        loopBasicDiv.appendChild(loop);
+        loopBasicDiv.appendChild(loopTog);
         loopBasicDiv.appendChild(back5);
         loopBasicDiv.appendChild(foreward5);
 
-        const buttons = [ loop, back5, foreward5 ];
+        const buttons = [ loopTog, back5, foreward5 ];
 
         buttons.forEach((button, index) => {
             button.addEventListener("click", function(e) {
@@ -155,7 +142,7 @@ function onPlayerReady(event) {
             });
         });
 
-        return loop; // not sure this is needed
+        return loopTog; // not sure this is needed
     }
 
 }
@@ -213,69 +200,20 @@ function speedControls(event, index) {
 
 
 function loopConrolBasic(event, index) {
-    // use player.seekTo(number) to set the seek
-    // may need to do something like: start: num, end: num, loop: on & create new player
-        // player.loadVideoById({'videoId': 'bHQqvYy5KYo',
-        //              'startSeconds': 5,
-        //              'endSeconds': 60});
 
+    const loopTog = document.getElementById('toggle-loop');
 
-    // ?FROM STACKOVERFLOW | maybe best 4 advanced loopControls (or just combo here)
-    // var section = {
-    //     start: 30,
-    //     end: 33
-    // };
-
-    // * this is triggered when player is ready
-    // function onPlayerReady(event) {
-    //     player.seekTo(section.start);
-    //     player.playVideo();
-    // }
-
-    // * when playing, 
-    // function onPlayerStateChange(event) {
-    //     if (event.data == YT.PlayerState.PLAYING) {
-    //         var duration = section.end - section.start;
-    //         setTimeout(restartVideoSection, duration * 1000);
-    //     }
-    // }
-
-    // function restartVideoSection() {
-    //     player.seekTo(section.start);
-    // }
-
-    const loop = document.getElementById('toggle-loop');
-
-    if (index === 0 && loopOn === false) {
-        loop.textContent = 'Toggle Loop: On'
-        loopOn = true;
+    if (index === 0 && loop === false) {
+        loopTog.textContent = 'Toggle Loop: On'
+        loop = true;
         restartVideoSection(); // currently hard-coded: 0
-        setTimeout(restartVideoSection, durationCalculator());
-        console.log('Loop is toggled:', setTimeout(restartVideoSection, durationCalculator()));
-        // toggling on/off adds '2 sec' to 'setTimeout'
     } else {
-        loop.textContent = 'Toggle Loop: Off'
-        loopOn = false;
+        loopTog.textContent = 'Toggle Loop: Off'
+        loop = false;
+        done = false; // *temp solution for single loop toggles
+        console.log('done:', done);
         console.log('Loop is toggled off');
     }
-
-    // console.log(`Button ${index} pressed.`);
-
-
-    //!TEST HERE
-//     if ((playing || !playing) && loopOn) {
-//     if (loopOn) {
-//         setTimeout(restartVideoSection, durationCalculator());
-//         console.log("loop is:", loopOn, "On from loopConrolBasic | duration is:", duration);
-//     }
-//     else if (speedToggleButton && loopOn) {
-//         setTimeout(restartVideoSection, durationCalculator());
-//         console.log("speed toggle:", speedToggleButton, "loop:", loopOn);
-//     } else if (!speedToggleButton && loopOn) {
-//         setTimeout(restartVideoSection, durationCalculator());
-//         console.log("speed toggle: ", speedToggleButton, "loop: ", loopOn);
-//     }
-// }
 
 }
 
