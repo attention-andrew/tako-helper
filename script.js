@@ -9,8 +9,9 @@ TODO: :3
         - problems: (just accepting this prob)
             - 1: only when I click off the video is when my keyControls() works
     [x] - once a video is loaded, you can't load a new one / override the player
-    ?[ ] - loop functionality | Where to put 'durationCalculator()' to update when speedToggle changes | needs to be set when toggle turns on, then re-set when speedToggle changes
-    * - thinking 
+    ?[ ] - +-5s loop functionality
+    * - need to add a new toggle/flag to track changes in section times | to make +-5s button presses OR future user input values make the loop restart immediately.
+    * etc: also may not need speedToggleButton w/ current code
 */
 
 // using YT-API
@@ -29,13 +30,15 @@ firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
 var yt_id; // for the embed id
 var player;
+var loopStartEnd;
 var playerReady = false;
 var loop = false;
 var done = false;
+var loopTimeChange = false;
 var speedToggleButton = false;
 var section = { // need to make dynamic for +-5s & custom loops
-    start: 0,
-    end: 3
+    start: 5,
+    end: 10
 };
 duration = section.end - section.start;
 var playing = false;
@@ -61,13 +64,17 @@ function onPlayerStateChange(event) {
 
     if (loop && state === YT.PlayerState.PLAYING && !done) {
         setTimeout(restartVideoSection, durationCalculator());
-        console.log('Loop is toggled:', setTimeout(restartVideoSection, durationCalculator()));
+        // console.log('Loop is toggled:', setTimeout(restartVideoSection, durationCalculator()));
         done = true; // currently loops once
+    } else if (loop && state === YT.PlayerState.PLAYING && done) { // KINDA FIXED? | may not be most efficient, BUT WORKS w/ PBS
+        setTimeout(restartVideoSection, durationCalculator());
+        // console.log('Loop is toggled:', setTimeout(restartVideoSection, durationCalculator()));
+        done = false;
     }
 
 }
 
-function restartVideoSection() {
+function restartVideoSection() { //! Causing problems w/ -5s loop controls IF I call it (even consolelog)
     player.seekTo(section.start);
 }
 
@@ -142,9 +149,12 @@ function onPlayerReady(event) {
             });
         });
 
-        return loopTog; // not sure this is needed
-    }
+        loopStartEnd = document.createElement('div');
+        loopStartEnd.id = 'toggle-start-end-times';
+        loopBasicDiv.appendChild(loopStartEnd);
 
+        return loopStartEnd; // not sure this is needed
+    }
 }
 
 function setPlaybackRateDiv(event) {
@@ -201,19 +211,26 @@ function speedControls(event, index) {
 
 function loopConrolBasic(event, index) {
 
+    loopStartEnd.textContent = ('Loop Start: ' + section.start + ' Loop End: ' + section.end);
+
     const loopTog = document.getElementById('toggle-loop');
 
     if (index === 0 && loop === false) {
         loopTog.textContent = 'Toggle Loop: On'
         loop = true;
-        restartVideoSection(); // currently hard-coded: 0
-    } else {
+        restartVideoSection();
+    } else if (index === 0 && loop === true) {
         loopTog.textContent = 'Toggle Loop: Off'
         loop = false;
-        done = false; // *temp solution for single loop toggles
-        console.log('done:', done);
-        console.log('Loop is toggled off');
     }
+
+    if (index === 1 && loop === true && section.start >= 5) {
+        section.start -= 5;
+        section.end -= 5;
+        restartVideoSection();  
+        console.log('-5s on loop | start:', section.start, 'end:', section.end);
+    }
+
 
 }
 
