@@ -10,7 +10,7 @@ TODO: :3
             - 1: only when I click off the video is when my keyControls() works
     [x] - once a video is loaded, you can't load a new one / override the player
     ?[ ] - +-5s loop functionality
-    * - need to add a new toggle/flag to track changes in section times | to make +-5s button presses OR future user input values make the loop restart immediately.
+    *[ ] - BUG pausing while loop is on will reset the loop
     * etc: also may not need speedToggleButton w/ current code
 */
 
@@ -35,7 +35,7 @@ var playerReady = false;
 var loop = false;
 var done = false;
 var loopTimeChange = false;
-var speedToggleButton = false;
+var speedToggleButton = false; // may not need this anymore
 var section = { // need to make dynamic for +-5s & custom loops
     start: 5,
     end: 10
@@ -62,19 +62,25 @@ function onPlayerStateChange(event) {
         playing = true;
     }
 
+    if (loopTimeChange && state === YT.PlayerState.PLAYING) {
+        loopTimeChange = false;
+        done = false;
+        return; // this is to skip this loop once
+    }
+
     if (loop && state === YT.PlayerState.PLAYING && !done) {
         setTimeout(restartVideoSection, durationCalculator());
         // console.log('Loop is toggled:', setTimeout(restartVideoSection, durationCalculator()));
-        done = true; // currently loops once
+        done = true;
     } else if (loop && state === YT.PlayerState.PLAYING && done) { // KINDA FIXED? | may not be most efficient, BUT WORKS w/ PBS
         setTimeout(restartVideoSection, durationCalculator());
-        // console.log('Loop is toggled:', setTimeout(restartVideoSection, durationCalculator()));
         done = false;
     }
 
+
 }
 
-function restartVideoSection() { //! Causing problems w/ -5s loop controls IF I call it (even consolelog)
+function restartVideoSection() {
     player.seekTo(section.start);
 }
 
@@ -211,8 +217,6 @@ function speedControls(event, index) {
 
 function loopConrolBasic(event, index) {
 
-    loopStartEnd.textContent = ('Loop Start: ' + section.start + ' Loop End: ' + section.end);
-
     const loopTog = document.getElementById('toggle-loop');
 
     if (index === 0 && loop === false) {
@@ -227,10 +231,25 @@ function loopConrolBasic(event, index) {
     if (index === 1 && loop === true && section.start >= 5) {
         section.start -= 5;
         section.end -= 5;
+        loopTimeChange = true;
         restartVideoSection();  
-        console.log('-5s on loop | start:', section.start, 'end:', section.end);
     }
 
+    if (index === 2 && loop === true && section.start <= (player.getDuration() - 5)) {
+        section.start += 5;
+        section.end += 5;
+        loopTimeChange = true;
+        restartVideoSection();  
+    }
+
+    if (index === 0 || index === 1 || index === 2) {
+        loopStartEnd.textContent = ('Loop Start: ' + section.start + ' Loop End: ' + section.end);
+
+        if (index === 1 || index === 2) {
+            console.log('+-5s on loop | start:', section.start, 'end:', section.end);
+        }
+
+    }
 
 }
 
