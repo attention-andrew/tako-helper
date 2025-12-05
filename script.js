@@ -9,7 +9,8 @@ TODO: :3
         - problems: (just accepting this prob)
             - 1: only when I click off the video is when my keyControls() works
     [x] - once a video is loaded, you can't load a new one / override the player
-    ?[ ] - +-5s loop functionality
+    ?[ ] - +-5s loop functionality 
+        * [ ] - fix: does a ~2s run before looping correctly once 
     *[ ] - BUG pausing while loop is on will reset the loop
     * etc: also may not need speedToggleButton w/ current code
 */
@@ -61,12 +62,30 @@ function onPlayerStateChange(event) {
     } else if (state === YT.PlayerState.PLAYING) {
         playing = true;
     }
+    
+    stableTime = Math.abs(player.getCurrentTime() - section.start) < 0.1;
 
-    if (loopTimeChange && state === YT.PlayerState.PLAYING) {
-        loopTimeChange = false;
-        done = false;
-        return; // this is to skip this loop once
-    }
+    if (loopTimeChange) {
+
+        if (stableTime && state === YT.PlayerState.PLAYING) {
+            // reached real start frame
+            loopTimeChange = false;
+            done = false;
+            return;
+        }
+
+        // still unstable OR wrong state -> skip all logic
+        return;
+    } // normal loop runs after this
+
+
+    //? replacing w/ above code | delete if above code works
+    // if (loopTimeChange && state === YT.PlayerState.PLAYING) {
+    //     console.log(stableTime);
+    //     loopTimeChange = false;
+    //     done = false;
+    //     return; // this is to skip this loop once
+    // }
 
     if (loop && state === YT.PlayerState.PLAYING && !done) {
         setTimeout(restartVideoSection, durationCalculator());
@@ -82,6 +101,8 @@ function onPlayerStateChange(event) {
 
 function restartVideoSection() {
     player.seekTo(section.start);
+    // player.playVideo();
+    Math.abs(player.getCurrentTime() - section.start) < 0.1
 }
 
 function durationCalculator() {
