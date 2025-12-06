@@ -36,6 +36,7 @@ var playerReady = false;
 var loop = false;
 var done = false;
 var loopTimeChange = false;
+var lastState;
 var speedToggleButton = false; // may not need this anymore
 var section = { // need to make dynamic for +-5s & custom loops
     start: 5,
@@ -56,28 +57,27 @@ function getEmbedId(url) {
 }
 
 function onPlayerStateChange(event) {
-    const state = player.getPlayerState();
-    if (state === YT.PlayerState.PAUSED || state === YT.PlayerState.CUED) {
+    const currentState = player.getPlayerState();
+    if (currentState === YT.PlayerState.PAUSED || currentState === YT.PlayerState.CUED) {
         playing = false;
-    } else if (state === YT.PlayerState.PLAYING) {
+    } else if (currentState === YT.PlayerState.PLAYING) {
         playing = true;
     }
     
-    stableTime = Math.abs(player.getCurrentTime() - section.start) < 0.1;
+    // stableTime = Math.abs(player.getCurrentTime() - section.start) < 0.1;
 
+    
     if (loopTimeChange) {
-
-        if (stableTime && state === YT.PlayerState.PLAYING) {
+        if (currentState === YT.PlayerState.PLAYING && lastState === 3) { // 3 = buffering
             // reached real start frame
             loopTimeChange = false;
-            done = false;
+            // done = false;
+        } else {
+            // still unstable OR wrong state -> skip all logic
+            lastState = currentState;
             return;
         }
-
-        // still unstable OR wrong state -> skip all logic
-        return;
     } // normal loop runs after this
-
 
     //? replacing w/ above code | delete if above code works
     // if (loopTimeChange && state === YT.PlayerState.PLAYING) {
@@ -87,22 +87,24 @@ function onPlayerStateChange(event) {
     //     return; // this is to skip this loop once
     // }
 
-    if (loop && state === YT.PlayerState.PLAYING && !done) {
+    if (loop && currentState === YT.PlayerState.PLAYING && !done) {
         setTimeout(restartVideoSection, durationCalculator());
         // console.log('Loop is toggled:', setTimeout(restartVideoSection, durationCalculator()));
         done = true;
-    } else if (loop && state === YT.PlayerState.PLAYING && done) { // KINDA FIXED? | may not be most efficient, BUT WORKS w/ PBS
+    } else if (loop && currentState === YT.PlayerState.PLAYING && done) { // KINDA FIXED? | may not be most efficient, BUT WORKS w/ PBS
         setTimeout(restartVideoSection, durationCalculator());
         done = false;
     }
 
+    lastState = currentState;
+    console.log(lastState);
 
 }
 
 function restartVideoSection() {
     player.seekTo(section.start);
     // player.playVideo();
-    Math.abs(player.getCurrentTime() - section.start) < 0.1
+
 }
 
 function durationCalculator() {
@@ -126,7 +128,8 @@ function playPauseVideo(event) {
 
 
 function onPlayerReady(event) {
-
+    lastState = player.getPlayerState();
+    
     // creates playback speed buttons
     if (playerReady === true) {
         const slow10 = document.createElement('button');
