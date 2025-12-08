@@ -34,9 +34,9 @@ var player;
 var loopStartEnd;
 var playerReady = false;
 var loop = false;
-var done = false;
 var loopTimeChange = false;
-var lastState;
+let loopTimer = null;
+var lastState = 1;
 var speedToggleButton = false; // may not need this anymore
 var section = { // need to make dynamic for +-5s & custom loops
     start: 5,
@@ -71,7 +71,6 @@ function onPlayerStateChange(event) {
         if (currentState === YT.PlayerState.PLAYING && lastState === 3) { // 3 = buffering
             // reached real start frame
             loopTimeChange = false;
-            // done = false;
         } else {
             // still unstable OR wrong state -> skip all logic
             lastState = currentState;
@@ -79,21 +78,11 @@ function onPlayerStateChange(event) {
         }
     } // normal loop runs after this
 
-    //? replacing w/ above code | delete if above code works
-    // if (loopTimeChange && state === YT.PlayerState.PLAYING) {
-    //     console.log(stableTime);
-    //     loopTimeChange = false;
-    //     done = false;
-    //     return; // this is to skip this loop once
-    // }
+    if (loop && currentState === YT.PlayerState.PLAYING) {
+        // Cancel any previous loop timer to avoid overlap/stutter
+        if (loopTimer) clearTimeout(loopTimer);
 
-    if (loop && currentState === YT.PlayerState.PLAYING && !done) {
-        setTimeout(restartVideoSection, durationCalculator());
-        // console.log('Loop is toggled:', setTimeout(restartVideoSection, durationCalculator()));
-        done = true;
-    } else if (loop && currentState === YT.PlayerState.PLAYING && done) { // KINDA FIXED? | may not be most efficient, BUT WORKS w/ PBS
-        setTimeout(restartVideoSection, durationCalculator());
-        done = false;
+        loopTimer = setTimeout(restartVideoSection, durationCalculator());
     }
 
     lastState = currentState;
