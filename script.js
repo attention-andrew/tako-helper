@@ -9,8 +9,14 @@ TODO: :3
         - problems: (just accepting this prob)
             - 1: only when I click off the video is when my keyControls() works
     [x] - once a video is loaded, you can't load a new one / override the player
-    ?[ ] - +-5s loop functionality 
-        * [ ] - fix: does a ~2s run before looping correctly once 
+    [x] - +-5s loop functionality 
+        [x] - fix: does a ~2s run before looping correctly once 
+    ?[ ] - Loop start/end input box 
+      *this should sync w/ buttons
+      ?[ ] - Toggle Loop ON butt: section.start = "player.getCurrentTime():Number"
+        ?[ ] - +-1s to start/end of loop (4 buttons total)
+        *bc start/end individually need precision
+
     *[ ] - BUG pausing while loop is on will reset the loop
     * etc: also may not need speedToggleButton w/ current code
 */
@@ -64,9 +70,6 @@ function onPlayerStateChange(event) {
         playing = true;
     }
     
-    // stableTime = Math.abs(player.getCurrentTime() - section.start) < 0.1;
-
-    
     if (loopTimeChange) {
         if (currentState === YT.PlayerState.PLAYING && lastState === 3) { // 3 = buffering
             // reached real start frame
@@ -86,14 +89,22 @@ function onPlayerStateChange(event) {
     }
 
     lastState = currentState;
-    console.log(lastState);
+
+
+    //! Code for Input Box Loop Start/End
+    //TODO: [ ] 1-check if input is empty
+    //TODO: [ ] 2-get/store value from input box
+    //TODO: [ ] 3-see if value(s) is valid (based on vid dur & start/end times)
+    //TODO: [ ] 4-change section.start/end based on value(s)
+
+    //? checking if input is empty
+
+
 
 }
 
 function restartVideoSection() {
     player.seekTo(section.start);
-    // player.playVideo();
-
 }
 
 function durationCalculator() {
@@ -154,8 +165,8 @@ function onPlayerReady(event) {
         const back5 = document.createElement('button');
         const foreward5 = document.createElement('button');
         loopTog.textContent = 'Toggle Loop: Off';
-        back5.textContent = '-5s';
-        foreward5.textContent = '+5s';
+        back5.textContent = '< -5s';
+        foreward5.textContent = '+5s >';
         loopBasicDiv.appendChild(loopTog);
         loopBasicDiv.appendChild(back5);
         loopBasicDiv.appendChild(foreward5);
