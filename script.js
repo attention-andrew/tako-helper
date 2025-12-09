@@ -42,6 +42,8 @@ var playerReady = false;
 var loop = false;
 var loopTimeChange = false;
 let loopTimer = null;
+let remainingLoopTime = null;
+let lastKnownTime = 0;
 var lastState = 1;
 var speedToggleButton = false; // may not need this anymore
 var section = { // need to make dynamic for +-5s & custom loops
@@ -64,31 +66,53 @@ function getEmbedId(url) {
 
 function onPlayerStateChange(event) {
     const currentState = player.getPlayerState();
-    if (currentState === YT.PlayerState.PAUSED || currentState === YT.PlayerState.CUED) {
+    // if (currentState === YT.PlayerState.PAUSED || currentState === YT.PlayerState.CUED) {
+    //     playing = false;
+    // } else if (currentState === YT.PlayerState.PLAYING) {
+    //     playing = true;
+    // }
+
+    // ! if paused, capture remaining duration for loop
+    if (currentState === YT.PlayerState.PAUSED ) {
         playing = false;
-    } else if (currentState === YT.PlayerState.PLAYING) {
-        playing = true;
-    }
-    
-    if (loopTimeChange) {
-        if (currentState === YT.PlayerState.PLAYING && lastState === 3) { // 3 = buffering
-            // reached real start frame
-            loopTimeChange = false;
-        } else {
-            // still unstable OR wrong state -> skip all logic
-            lastState = currentState;
-            return;
+
+        if (loop) {
+            // stop current timer
+            if (loopTimer) clearTimeout(loopTimer);
+
+            // calculate time left IN LOOP
+            let now = player.getCurrentTime();
+            remainingLoopTime = Math.max(section.end - now, 0);
+
+            lastKnownTime = now; // useful for checking seeking
         }
-    } // normal loop runs after this
-
-    if (loop && currentState === YT.PlayerState.PLAYING) {
-        // Cancel any previous loop timer to avoid overlap/stutter
-        if (loopTimer) clearTimeout(loopTimer);
-
-        loopTimer = setTimeout(restartVideoSection, durationCalculator());
     }
 
-    lastState = currentState;
+    if (currentState === YT.PlayerState.PLAYING) {
+        playing = true;
+
+        // detect if user SEEKED
+        let curr = player.getCurrentTime();
+        let seeked = Math.abs(curr - lastKnownTime) > 0.25; // threshold to detect dragging
+
+        if (loop) {
+            // if user dragged the timeline -> reset loop timing
+            if (seeked) {
+                remainingLoopTime = Math.max(section.end - curr, 0);
+            }
+
+            // clear old timer
+            if (loopTimer) clearTimeout(loopTimer);
+
+            // resume loop with corrected remaining time
+            loopTimer = setTimeout(
+                restartVideoSection, (remainingLoopTime / player.getPlaybackRate()) * 1000);
+        }
+
+        lastKnownTime = curr;
+    }
+
+    lastState = player.getPlayerState();
 
 
     //! Code for Input Box Loop Start/End
@@ -98,17 +122,17 @@ function onPlayerStateChange(event) {
     //TODO: [ ] 4-change section.start/end based on value(s)
 
     //? checking if input is empty
-
+    if (document.getElementById('loop-start').value) {
+        // input has value
+    } else {
+        // input empty
+    }
 
 
 }
 
 function restartVideoSection() {
     player.seekTo(section.start);
-}
-
-function durationCalculator() {
-    return (duration / player.getPlaybackRate()) * 1000;
 }
 
 function playPauseVideo(event) {
