@@ -47,8 +47,8 @@ let lastKnownTime = 0;
 var lastState = 1;
 var speedToggleButton = false; // may not need this anymore
 var section = { // need to make dynamic for +-5s & custom loops
-    start: 5,
-    end: 10
+    start: 0,
+    end: 5
 };
 duration = section.end - section.start;
 var playing = false;
@@ -56,6 +56,20 @@ var currentPlayback = "";
 const currentPlaybackDiv = document.getElementById("current-playback");
 const speedControlsDiv = document.getElementById("speed-controls");
 const loopBasicDiv = document.getElementById("loop-basic");
+const loopAdvDiv = document.getElementById("loop-advance");
+const loopCont = document.getElementById("loop-controls");
+
+function formatTime(seconds) {
+    seconds = Math.floor(seconds);
+
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+
+    const minsStr = mins.toString().padStart(2, '0');
+    const secsStr = secs.toString().padStart(2, '0');
+
+    return `${minsStr}:${secsStr}`;
+}
 
 
 function getEmbedId(url) {
@@ -66,13 +80,10 @@ function getEmbedId(url) {
 
 function onPlayerStateChange(event) {
     const currentState = player.getPlayerState();
-    // if (currentState === YT.PlayerState.PAUSED || currentState === YT.PlayerState.CUED) {
-    //     playing = false;
-    // } else if (currentState === YT.PlayerState.PLAYING) {
-    //     playing = true;
-    // }
 
-    // ! if paused, capture remaining duration for loop
+    currentTime = player.getCurrentTime();
+
+    // ? if paused, capture remaining duration for loop
     if (currentState === YT.PlayerState.PAUSED ) {
         playing = false;
 
@@ -91,25 +102,37 @@ function onPlayerStateChange(event) {
     if (currentState === YT.PlayerState.PLAYING) {
         playing = true;
 
-        // detect if user SEEKED
-        let curr = player.getCurrentTime();
-        let seeked = Math.abs(curr - lastKnownTime) > 0.25; // threshold to detect dragging
+        // Detect if user SEEKED outside current loop
+        const seekedOutsideLoop = loop && (currentTime < section.start || currentTime > section.end);
 
         if (loop) {
             // if user dragged the timeline -> reset loop timing
-            if (seeked) {
-                remainingLoopTime = Math.max(section.end - curr, 0);
+            if (seekedOutsideLoop) {
+                // reset loop to new start/end
+                section.start = currentTime;
+                section.end = currentTime + 5; // default currently 5s loop
+                console.log(`Loop auto-reset: start=${section.start}, end=${section.end}`)
             }
 
             // clear old timer
             if (loopTimer) clearTimeout(loopTimer);
 
-            // resume loop with corrected remaining time
-            loopTimer = setTimeout(
-                restartVideoSection, (remainingLoopTime / player.getPlaybackRate()) * 1000);
-        }
+            // calculate remaining loop time based on PBR
+            if (seekedOutsideLoop || remainingLoopTime === null) {
+                // full duration if just toggled or seeked outside
+                remainingLoopTime = section.end - currentTime;
+            }    
 
-        lastKnownTime = curr;
+            loopTimer = setTimeout(restartVideoSection,
+                (remainingLoopTime / player.getPlaybackRate()) * 1000);
+            
+            // update last known time
+            lastKnownTime = currentTime;
+
+            // update UI
+            loopStartEnd.textContent = 
+            `Loop Start: ${formatTime(Math.round(section.start))}  Loop End: ${formatTime(Math.round(section.end))}`;
+        }
     }
 
     lastState = player.getPlayerState();
@@ -195,7 +218,23 @@ function onPlayerReady(event) {
         loopBasicDiv.appendChild(back5);
         loopBasicDiv.appendChild(foreward5);
 
-        const buttons = [ loopTog, back5, foreward5 ];
+        // +-1s buttons
+        const startM1s = document.createElement('button');
+        const startP1s = document.createElement('button');
+        const endM1s = document.createElement('button');
+        const endP1s = document.createElement('button');
+   
+        startM1s.textContent = '< -1s Start';
+        startP1s.textContent = '+1s Start >';
+        endM1s.textContent = '< -1s End';
+        endP1s.textContent = '+1s End >';
+
+        loopAdvDiv.appendChild(startM1s);
+        loopAdvDiv.appendChild(startP1s);
+        loopAdvDiv.appendChild(endM1s);
+        loopAdvDiv.appendChild(endP1s);
+
+        const buttons = [ loopTog, back5, foreward5, startM1s, startP1s, endM1s, endP1s ];
 
         buttons.forEach((button, index) => {
             button.addEventListener("click", function(e) {
@@ -205,7 +244,7 @@ function onPlayerReady(event) {
 
         loopStartEnd = document.createElement('div');
         loopStartEnd.id = 'toggle-start-end-times';
-        loopBasicDiv.appendChild(loopStartEnd);
+        loopCont.appendChild(loopStartEnd);
 
         return loopStartEnd; // not sure this is needed
     }
@@ -270,11 +309,29 @@ function loopConrolBasic(event, index) {
     if (index === 0 && loop === false) {
         loopTog.textContent = 'Toggle Loop: On'
         loop = true;
+
+        // set dynamic loop start/end
+        section.start = player.getCurrentTime();
+        section.end = section.start + 5;
+
+        // clamp to video duration if needed
+        if (section.end > player.getDuration()) {
+            section.end = player.getDuration();
+        }
+
         restartVideoSection();
     } else if (index === 0 && loop === true) {
         loopTog.textContent = 'Toggle Loop: Off'
         loop = false;
+        
+        // clear loop
+        if (loopTimer) {
+            clearTimeout(loopTimer);
+            loopTimer = null;
+            remainingLoopTime = null;
+        }
     }
+
 
     if (index === 1 && loop === true && section.start >= 5) {
         section.start -= 5;
@@ -291,7 +348,7 @@ function loopConrolBasic(event, index) {
     }
 
     if (index === 0 || index === 1 || index === 2) {
-        loopStartEnd.textContent = ('Loop Start: ' + section.start + ' Loop End: ' + section.end);
+        loopStartEnd.textContent = `Loop Start: ${formatTime(Math.round(section.start))}  Loop End: ${formatTime(Math.round(section.end))}`;
 
         if (index === 1 || index === 2) {
             console.log('+-5s on loop | start:', section.start, 'end:', section.end);
