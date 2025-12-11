@@ -50,7 +50,7 @@ var section = { // need to make dynamic for +-5s & custom loops
     start: 0,
     end: 5
 };
-duration = section.end - section.start;
+var loopLength = section.end - section.start;
 var playing = false;
 var currentPlayback = "";
 const currentPlaybackDiv = document.getElementById("current-playback");
@@ -107,12 +107,14 @@ function onPlayerStateChange(event) {
 
         if (loop) {
             // if user dragged the timeline -> reset loop timing
+            
             if (seekedOutsideLoop) {
                 // reset loop to new start/end
                 section.start = currentTime;
-                section.end = currentTime + 5; // default currently 5s loop
+                section.end = currentTime + loopLength; 
                 console.log(`Loop auto-reset: start=${section.start}, end=${section.end}`)
             }
+
 
             // clear old timer
             if (loopTimer) clearTimeout(loopTimer);
@@ -319,17 +321,20 @@ function loopConrolBasic(event, index) {
             section.end = player.getDuration();
         }
 
+        loopStartEnd.textContent = `Loop Start: ${formatTime(Math.round(section.start))}  Loop End: ${formatTime(Math.round(section.end))}`;
+
         restartVideoSection();
     } else if (index === 0 && loop === true) {
         loopTog.textContent = 'Toggle Loop: Off'
         loop = false;
-        
+
         // clear loop
         if (loopTimer) {
             clearTimeout(loopTimer);
             loopTimer = null;
             remainingLoopTime = null;
         }
+        loopStartEnd.textContent = '';
     }
 
 
@@ -347,7 +352,48 @@ function loopConrolBasic(event, index) {
         restartVideoSection();  
     }
 
-    if (index === 0 || index === 1 || index === 2) {
+    // +-1s start / end buttons
+    // if (index === 3) { // -1s start
+    //     section.start -= 1;
+        
+    //     section.start = Math.max(0, Math.min(section.start, section.end - 0.1));
+
+    //     loopLength = section.end - section.start;
+
+    //     if (loop) {
+    //         // stop old timer
+    //         if (loopTimer) clearTimeout(loopTimer);
+
+    //         // new remaining time
+    //         remainingLoopTime = section.end - player.getCurrentTime();
+
+    //         loopTimer = setTimeout(restartVideoSection, (remainingLoopTime / player.getPlaybackRate()) * 1000);
+    //     }
+    // }
+
+    if (index === 3) { // -1s start
+    section.start = Math.max(0, Math.min(section.start - 1, section.end - 0.1));
+    loopLength = section.end - section.start;
+    updateLoopTimer();
+    }
+    if (index === 4) { // +1s start
+        section.start = Math.min(section.start + 1, section.end - 0.1);
+        loopLength = section.end - section.start;
+        updateLoopTimer();
+    }
+    if (index === 5) { // -1s end
+        section.end = Math.max(section.start + 0.1, section.end - 1);
+        loopLength = section.end - section.start;
+        updateLoopTimer();
+    }
+    if (index === 6) { // +1s end
+        section.end = Math.min(player.getDuration(), section.end + 1);
+        loopLength = section.end - section.start;
+        updateLoopTimer();
+    }
+
+    // update loop start/end div + debug
+    if (index === 1 || index === 2) {
         loopStartEnd.textContent = `Loop Start: ${formatTime(Math.round(section.start))}  Loop End: ${formatTime(Math.round(section.end))}`;
 
         if (index === 1 || index === 2) {
@@ -355,7 +401,22 @@ function loopConrolBasic(event, index) {
         }
 
     }
+}
 
+function updateLoopTimer() {
+    if (!loop) return;
+    if (loopTimer) clearTimeout(loopTimer);
+
+    let currentTime = player.getCurrentTime();
+    if (currentTime < section.start || currentTime > section.end) {
+        remainingLoopTime = loopLength;
+        player.seekTo(section.start);
+    } else {
+        remainingLoopTime = section.end - currentTime;
+    }
+
+    loopTimer = setTimeout(restartVideoSection, (remainingLoopTime / player.getPlaybackRate()) * 1000);
+    loopStartEnd.textContent = `Loop Start: ${formatTime(Math.round(section.start))}  Loop End: ${formatTime(Math.round(section.end))}`;
 }
 
 
