@@ -29,4 +29,4 @@ This project is released under a **Non-Commercial License**.
 
 - You can **use, modify, and contribute** to the project for personal, educational, or non-commercial purposes.  
 - You **cannot sell, distribute for profit, or use commercially** without written permission from the author.  
-- See the [LICENSE](LICENSE) file for full details.
+- See the [LICENSE](LICENSE.md) file for full details.
