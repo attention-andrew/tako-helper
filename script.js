@@ -42,7 +42,7 @@ var playerReady = false;
 var loop = false;
 var loopTimeChange = false;
 let loopTimer = null;
-let remainingLoopTime = null;
+//let remainingLoopTime = null;
 let lastKnownTime = 0;
 var lastState = 1;
 var speedToggleButton = false; // may not need this anymore
@@ -80,81 +80,76 @@ function getEmbedId(url) {
 
 function onPlayerStateChange(event) {
     const currentState = player.getPlayerState();
+    const currentTime = player.getCurrentTime();
 
-    currentTime = player.getCurrentTime();
+    // Update playing flag
+    playing = (currentState === YT.PlayerState.PLAYING);
 
-    // ? if paused, capture remaining duration for loop
-    if (currentState === YT.PlayerState.PAUSED ) {
-        playing = false;
+    if (loop) {
+        // Clear previous timer
+        if (loopTimer) clearTimeout(loopTimer);
 
-        if (loop) {
-            // stop current timer
-            if (loopTimer) clearTimeout(loopTimer);
+        if (currentState === YT.PlayerState.PLAYING) {
+            // Detect if user sought outside current loop
+            const seekedOutsideLoop = currentTime < section.start || currentTime > section.end;
 
-            // calculate time left IN LOOP
-            let now = player.getCurrentTime();
-            remainingLoopTime = Math.max(section.end - now, 0);
-
-            lastKnownTime = now; // useful for checking seeking
-        }
-    }
-
-    if (currentState === YT.PlayerState.PLAYING) {
-        playing = true;
-
-        // Detect if user SEEKED outside current loop
-        const seekedOutsideLoop = loop && (currentTime < section.start || currentTime > section.end);
-
-        if (loop) {
-            // if user dragged the timeline -> reset loop timing
-            
             if (seekedOutsideLoop) {
-                // reset loop to new start/end
+                // Slide loop to new location while keeping loop length
                 section.start = currentTime;
-                section.end = currentTime + loopLength; 
-                console.log(`Loop auto-reset: start=${section.start}, end=${section.end}`)
+                section.end = currentTime + loopLength;
+
+                // Clamp end to video duration
+                if (section.end > player.getDuration()) {
+                    section.end = player.getDuration();
+                    section.start = section.end - loopLength;
+                }
             }
 
+            // Compute remaining time in loop
+            const remaining = section.end - currentTime;
 
-            // clear old timer
+            // Restart loop if needed
+            if (remaining <= 0) {
+                restartVideoSection();
+            } else {
+                loopTimer = setTimeout(restartVideoSection, (remaining / player.getPlaybackRate()) * 1000);
+            }
+
+            // Update loop UI
+            loopStartEnd.textContent =
+                `Loop Start: ${formatTime(Math.round(section.start))}  Loop End: ${formatTime(Math.round(section.end))}`;
+        }
+
+        if (currentState === YT.PlayerState.PAUSED) {
+            // Stop any active timer
             if (loopTimer) clearTimeout(loopTimer);
-
-            // calculate remaining loop time based on PBR
-            if (seekedOutsideLoop || remainingLoopTime === null) {
-                // full duration if just toggled or seeked outside
-                remainingLoopTime = section.end - currentTime;
-            }    
-
-            loopTimer = setTimeout(restartVideoSection,
-                (remainingLoopTime / player.getPlaybackRate()) * 1000);
-            
-            // update last known time
-            lastKnownTime = currentTime;
-
-            // update UI
-            loopStartEnd.textContent = 
-            `Loop Start: ${formatTime(Math.round(section.start))}  Loop End: ${formatTime(Math.round(section.end))}`;
+        }
+    } else {
+        // Loop is OFF → clear timer
+        if (loopTimer) {
+            clearTimeout(loopTimer);
+            loopTimer = null;
         }
     }
 
-    lastState = player.getPlayerState();
+    // Optional: handle input boxes for start/end (sync if needed)
+    const loopStartInput = document.getElementById('loop-start').value;
+    const loopEndInput = document.getElementById('loop-end').value;
+    if (loopStartInput) { /* parse/validate */ }
+    if (loopEndInput) { /* parse/validate */ }
 
-
-    //! Code for Input Box Loop Start/End
-    //TODO: [ ] 1-check if input is empty
-    //TODO: [ ] 2-get/store value from input box
-    //TODO: [ ] 3-see if value(s) is valid (based on vid dur & start/end times)
-    //TODO: [ ] 4-change section.start/end based on value(s)
-
-    //? checking if input is empty
-    if (document.getElementById('loop-start').value) {
-        // input has value
-    } else {
-        // input empty
-    }
-
-
+    // Debug log
+    console.log(
+        "STATE:", currentState,
+        "PLAYING:", playing,
+        "currentTime:", currentTime,
+        "loop:", loop,
+        "start:", section.start,
+        "end:", section.end
+    );
 }
+
+
 
 function restartVideoSection() {
     player.seekTo(section.start);
@@ -324,6 +319,7 @@ function loopConrolBasic(event, index) {
         loopStartEnd.textContent = `Loop Start: ${formatTime(Math.round(section.start))}  Loop End: ${formatTime(Math.round(section.end))}`;
 
         restartVideoSection();
+
     } else if (index === 0 && loop === true) {
         loopTog.textContent = 'Toggle Loop: Off'
         loop = false;
@@ -332,7 +328,6 @@ function loopConrolBasic(event, index) {
         if (loopTimer) {
             clearTimeout(loopTimer);
             loopTimer = null;
-            remainingLoopTime = null;
         }
         loopStartEnd.textContent = '';
     }
@@ -343,6 +338,7 @@ function loopConrolBasic(event, index) {
         section.end -= 5;
         loopTimeChange = true;
         restartVideoSection();  
+
     }
 
     if (index === 2 && loop === true && section.start <= (player.getDuration() - 5)) {
@@ -350,31 +346,13 @@ function loopConrolBasic(event, index) {
         section.end += 5;
         loopTimeChange = true;
         restartVideoSection();  
+
     }
 
-    // +-1s start / end buttons
-    // if (index === 3) { // -1s start
-    //     section.start -= 1;
-        
-    //     section.start = Math.max(0, Math.min(section.start, section.end - 0.1));
-
-    //     loopLength = section.end - section.start;
-
-    //     if (loop) {
-    //         // stop old timer
-    //         if (loopTimer) clearTimeout(loopTimer);
-
-    //         // new remaining time
-    //         remainingLoopTime = section.end - player.getCurrentTime();
-
-    //         loopTimer = setTimeout(restartVideoSection, (remainingLoopTime / player.getPlaybackRate()) * 1000);
-    //     }
-    // }
-
     if (index === 3) { // -1s start
-    section.start = Math.max(0, Math.min(section.start - 1, section.end - 0.1));
-    loopLength = section.end - section.start;
-    updateLoopTimer();
+        section.start = Math.max(0, Math.min(section.start - 1, section.end - 0.1));
+        loopLength = section.end - section.start;
+        updateLoopTimer();
     }
     if (index === 4) { // +1s start
         section.start = Math.min(section.start + 1, section.end - 0.1);
@@ -403,21 +381,41 @@ function loopConrolBasic(event, index) {
     }
 }
 
+
 function updateLoopTimer() {
-    if (!loop) return;
+    if (!loop) return; // only update if loop is on
+
+    // Clear previous timer
     if (loopTimer) clearTimeout(loopTimer);
 
     let currentTime = player.getCurrentTime();
+
+    // If user is outside the loop, slide the loop to the new location
     if (currentTime < section.start || currentTime > section.end) {
-        remainingLoopTime = loopLength;
+        section.start = currentTime;
+        section.end = currentTime + loopLength;
+
+        // Clamp end to video duration
+        if (section.end > player.getDuration()) {
+            section.end = player.getDuration();
+            section.start = section.end - loopLength;
+        }
+
+        // Jump to new loop start
         player.seekTo(section.start);
-    } else {
-        remainingLoopTime = section.end - currentTime;
     }
 
-    loopTimer = setTimeout(restartVideoSection, (remainingLoopTime / player.getPlaybackRate()) * 1000);
-    loopStartEnd.textContent = `Loop Start: ${formatTime(Math.round(section.start))}  Loop End: ${formatTime(Math.round(section.end))}`;
+    // Update remaining loop duration
+    const remaining = section.end - player.getCurrentTime();
+
+    // Schedule loop restart
+    loopTimer = setTimeout(restartVideoSection, (remaining / player.getPlaybackRate()) * 1000);
+
+    // Update UI
+    loopStartEnd.textContent =
+        `Loop Start: ${formatTime(Math.round(section.start))}  Loop End: ${formatTime(Math.round(section.end))}`;
 }
+
 
 
 function createPlayer() {
