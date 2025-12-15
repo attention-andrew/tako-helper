@@ -6,11 +6,18 @@
 4. Translate each line into English (or native language).
 5. Build flashcards from the sentences.
 
-_Currently can link YouTube videos and control playback speed with hotkeys._ <br><br>
+_Currently can link YouTube videos, control playback speed with hotkeys, **and loop at any point in the video!**._ <br><br>
+- Loop features:
+  - Toggle loop on to enable a 5 second loop from where it was toggled
+  - Click the +-5s buttons to change the start & end times of the loop (or simply scrub throught the timeline or even use keyboard seeking hotkeys)
+  - Change the loop duration with +-1s start/end buttons (i.e., change start/end from: start: 5s end: 10s to something like start: 8s end 11s) (get specific with parts you want to practice!)
+
 **Working on:**
 - _Displaying target language transcriptions._
 - _Translating target language to native language._
 - _Building flashcards from each sentence._
 
 ### Preview
-<img width="911" height="914" alt="Screenshot 2025-11-18 at 10 07 20" src="https://github.com/user-attachments/assets/ed0627ff-8360-45a7-93f5-1016b0b3c67a" />
+<img width="791" height="816" alt="image" src="https://github.com/user-attachments/assets/0ec130b6-aa54-4245-b04d-5d6911e2a432" />
+
+
