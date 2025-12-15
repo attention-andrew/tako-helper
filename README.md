@@ -21,7 +21,8 @@ _Currently can link YouTube videos, control playback speed with hotkeys, **and l
 - _Building flashcards from each sentence._
 
 ### Preview
-<img width="863" height="890" alt="image" src="https://github.com/user-attachments/assets/3c02fded-876e-4198-949c-5fdabc76f7d3" />
+<img width="871" height="897" alt="image" src="https://github.com/user-attachments/assets/eaa9bc88-c5f8-4d4a-9596-72b45325889d" />
+
 
 
 ## License
