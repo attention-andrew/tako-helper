@@ -21,3 +21,12 @@ _Currently can link YouTube videos, control playback speed with hotkeys, **and l
 <img width="791" height="816" alt="image" src="https://github.com/user-attachments/assets/0ec130b6-aa54-4245-b04d-5d6911e2a432" />
 
 
+
+
+## License
+
+This project is released under a **Non-Commercial License**.
+
+- You can **use, modify, and contribute** to the project for personal, educational, or non-commercial purposes.  
+- You **cannot sell, distribute for profit, or use commercially** without written permission from the author.  
+- See the [LICENSE](LICENSE) file for full details.
